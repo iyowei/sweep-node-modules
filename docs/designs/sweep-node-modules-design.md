@@ -20,6 +20,7 @@
 | 2026-09-23 | 实现落地回写: 模块表补 delete / 门面 / bench / scripts; 测试策略补实现覆盖指针; 关联 [ADR 0008](../adrs/0008-transcription-kit.md) 转写契约套件 |
 | 2026-09-23 | 分发形态: 编译产物 + 单文件打包发布到 npm (`@iyowei/sweep-node-modules`); 「明确不做」清单移除 npm 发布项                                       |
 | 2026-09-23 | 代码树补 npm 分发入口 `bin/sweep-nm.mjs`; 实测规模改为指代验收命令的实时输出 (不写死条数)                                                       |
+| 2026-09-23 | 分发形态回写: 代码树补 `dist/cli.js` 与三入口差异 (见 [ADR 0009](../adrs/0009-npm-distribution-form.md)); 导出面补 `runtimeLabel`               |
 
 ## 分册索引
 
@@ -57,7 +58,8 @@ src/
 bench/                  # 基准仪器 (扫描 / 体积 / 真实工作区 / 压测四组)
 bin/sweep-nm            # sh 启动器: 挑选运行时 (Bun 优先, Node 回退) 后 exec src/cli.ts
 bin/sweep-nm.cmd        # cmd 启动器 (Windows): 与 sh 启动器同逻辑
-bin/sweep-nm.mjs        # npm 分发的 bin 入口 (优先跑编译产物 dist/cli.js): 三者同逻辑, 差异只在宿主
+bin/sweep-nm.mjs        # npm 分发的 bin 入口: 优先跑 dist/cli.js, 无产物回退 src/cli.ts; 三者职责同逻辑, 差异在宿主与入口选择
+dist/cli.js             # 构建产物 (派生件, 由 bun run build 生成, 不入库): 仅 npm 分发态需要
 scripts/transcription/  # 转写契约套件的验收器与变异生成器 (见 docs/protocol/)
 ```
 
@@ -66,6 +68,7 @@ scripts/transcription/  # 转写契约套件的验收器与变异生成器 (见 
 - `isBun`: 运行时探测 (功能检测 `typeof Bun !== 'undefined'`: 有 Bun 走 Bun 实现, 无则回退 Node);
 - `spawnCapture(cmd, args)`: 子进程执行并捕获 stdout (Bun 走 `Bun.spawn`, Node 走 `node:child_process`; stderr 直通不捕获);
 - `readTextFile(path)` / `writeTextFile(path, text)`: 文本读写 (Bun 走 `Bun.file` / `Bun.write`, Node 走 `node:fs/promises`);
+- `runtimeLabel`: 运行时自述 (形如 `bun 1.4.2`, 取运行时在 `process.versions` 自报的字段, 直接跑与经启动器跑都报真身), 供顶栏如实展示本次执行环境 (分册: 命令面与输出);
 - 其余能力 (目录遍历、删除等) 一律直接走 `node:` 兼容 API, 不设分支。
 
 ## 三、测试策略
@@ -106,4 +109,5 @@ scripts/transcription/  # 转写契约套件的验收器与变异生成器 (见 
 - [ADR 0006: 双运行时支持与 Bun 优先的 API 策略](../adrs/0006-dual-runtime-bun-first.md)
 - [ADR 0007: 三平台可移植性与配置定位](../adrs/0007-platform-portability.md)
 - [ADR 0008: 转写契约套件](../adrs/0008-transcription-kit.md)
+- [ADR 0009: npm 分发形态](../adrs/0009-npm-distribution-form.md)
 - 工程闸门操作细节以仓库根 `lefthook.yml`、`.oxlintrc.json`、`.prettierrc` 为准; 文档体系与命名约定见 [docs/README](../README.md)。

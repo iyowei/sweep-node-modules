@@ -22,9 +22,9 @@
 
 ## 决策结论与选择原因 (Decision & Why)
 
-1. **判定模型: 固定配置**. `roots` (扫描根, 任意多个) + `exclude` (排除名单, 从根到 `node_modules` 的任意一级目录名命中即跳过) 写在 `~/.config/sweep-node-modules/config.json`。
+1. **判定模型: 固定配置**. `roots` (扫描根, 任意多个) + `exclude` (排除名单, 从根到 `node_modules` 的任意一级目录名命中即跳过) + `include` (包含名单, 白名单, 命中才纳入, 口径与 `exclude` 同款) 写在 `~/.config/sweep-node-modules/config.json`; 名单字段的完整规格 (含「排除优先」等规则) 见 [配置与初始化](../designs/config-and-initialization.md)。
 2. **执行模型: 预览默认, `--yes` 才删**. 不带 `--yes` 时只输出清单 (路径 + 体积 + 合计), 零副作用; 带 `--yes` 时执行删除。
-3. **临时追加**: 命令行 `--exclude` 可重复, 与配置合并。
+3. **临时追加**: 命令行 `--exclude` 与 `--include` 均可重复, 与配置合并。
 
 选择原因: 排除语义取「任意一级目录名命中即跳过」, 多排除 = 少删, 天然落在安全方向; 预览与执行分离, 让「看清再删」成为默认路径而非纪律要求。
 

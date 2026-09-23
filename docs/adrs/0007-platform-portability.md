@@ -33,8 +33,8 @@
 1. **路径全面可移植**: 只用 `node:path` 拼装与比较路径; 家目录经 `os.homedir()` (禁 `$HOME` 字符串拼接); 目录包含性判定以 `path.relative` 结果为准 (禁用字符串前缀比较), win32 下按大小写不敏感比较; 禁硬编码 `/` 与 `\` 分隔符。
 2. **配置定位 (平台自适应 + 可覆盖)**: 默认路径 Windows 为 `%APPDATA%\sweep-node-modules\config.json`, macOS / Linux 为 `~/.config/sweep-node-modules/config.json`; 优先级 `--config <path>` > 环境变量 `SWEEP_NM_CONFIG` > 平台默认 (覆盖通道亦服务测试与受控环境)。
 3. **核心零 POSIX 假设**: 扫描 / 体积 / 删除 / 配置全走运行时 API; 平台命令仅允许作可用时的快路径, 且必须存在等价的纯实现基线 (体积统计的两候选与裁定落点见 [扫描与体积](../designs/scan-and-size.md))。
-4. **入口分轨**: macOS / Linux 用 `bin/sweep-nm` (sh); Windows 用 `bin/sweep-nm.cmd` (同逻辑的 cmd 包装, Bun 优先 / Node 回退, 不用 `readlink`); 包管理器 bin shim 亦兼容。Windows 两项 (cmd 启动器实跑 / shim 兼容) 均未经真机验证 `[证据缺口]`, 待真机轮补验。
-5. **终端能力降级**: 颜色在非 TTY / `NO_COLOR` / 能力不足终端降级为纯文本, 信息零丢失 (视觉规范见 [命令面与输出](../designs/cli-surface.md))。
+4. **入口分轨 (三入口)**: 三者职责同逻辑 (挑选运行时, Bun 优先 / Node 回退), 差异在宿主与入口选择: 仓库内 macOS / Linux 用 `bin/sweep-nm` (sh); 仓库内 Windows 用 `bin/sweep-nm.cmd` (cmd 包装, 不用 `readlink`); npm 安装用 `bin/sweep-nm.mjs` (package.json 的 `bin` 目标, 同时承担 Unix 与 Windows, shebang 固定 node, 也是包管理器 shim 的落点), 它多加一条入口选择: 优先跑编译产物 `dist/cli.js`, 无产物则回退源码 `src/cli.ts` (包内只有产物, 开发态通常无产物, 见 [ADR 0009](0009-npm-distribution-form.md))。Windows 相关项 (cmd 启动器实跑 / shim 兼容) 均未经真机验证 `[证据缺口]`, 待真机轮补验; 该缺口的适用面现已含 npm 安装路径 (`bin/sweep-nm.mjs` 在 Windows 上经 npm 的 cmd-shim 承载)。
+5. **终端能力降级**: 颜色在非 TTY / `NO_COLOR` / 能力不足终端降级为纯文本, 着色与行结构不丢失; 按设计仅真终端出现的内容 (顶栏运行时自述与名单生效回执) 不在此列, 非 TTY 不降级出现 (视觉规范见 [命令面与输出](../designs/cli-surface.md))。
 
 ## 后果与权衡妥协 (Consequences & Trade-offs)
 
@@ -58,5 +58,5 @@
 
 **关联引用**
 
-- 双运行时与入口基线见 [ADR 0006](0006-dual-runtime-bun-first.md)。
+- 双运行时与入口基线见 [ADR 0006](0006-dual-runtime-bun-first.md); npm 分发入口与编译产物见 [ADR 0009](0009-npm-distribution-form.md)。
 - 视觉规范见 [命令面与输出](../designs/cli-surface.md); 配置定位落点见 [配置与初始化](../designs/config-and-initialization.md)。
