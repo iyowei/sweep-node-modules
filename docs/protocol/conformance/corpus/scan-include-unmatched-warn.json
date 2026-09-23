@@ -1,0 +1,27 @@
+{
+  "id": "scan-include-unmatched-warn",
+  "specRefs": ["BC-33", "OF-12"],
+  "fixture": {
+    "projects": [{ "dir": "zone/keep" }]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"include\": [\"nosuch\"]\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/zone\n  ░ 未发现 node_modules\n",
+    "stdoutMustNotContain": ["keep"],
+    "stderrContains": [
+      "包含名未匹配到任何目录: nosuch (按目录名精确匹配)",
+      "包含名单无一条命中, 本次扫描必为空结果 (请核对名字与大小写)"
+    ]
+  }
+}

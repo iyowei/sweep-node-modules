@@ -42,6 +42,9 @@ sweep-nm --yes
 # 临时追加排除(可重复)
 sweep-nm --exclude my-kits --exclude url-tool
 
+# 只清理名单命中的目录(可重复, 与配置合并)
+sweep-nm --include my-kits
+
 # 初始化向导: 交互式生成配置文件
 sweep-nm init
 ```
@@ -56,12 +59,14 @@ sweep-nm init
     "/Users/iyowei/workspace/development",
     "/Users/iyowei/self/development"
   ],
-  "exclude": ["my-kits"]
+  "exclude": ["my-kits"],
+  "include": []
 }
 ```
 
 - `roots`: 扫描根目录, 任意多个; 重复或嵌套的根按真实路径去重。
 - `exclude`: 排除名单; 从根到 `node_modules` 的任意一级目录名命中即跳过 (多排除 = 少删, 安全方向)。
+- `include`: 包含名单 (白名单); 命中才纳入, 口径与 `exclude` 同款; 缺省或空数组 = 不过滤 (多包含 = 多删); 与 `exclude` 同时命中时 `exclude` 优先。写错名字会让结果直接为空, 故未命中的名字会在 stderr 警示。
 - 首次运行且无配置: 交互终端下自动进入初始化向导; 非交互环境 (脚本等) 以当前工作目录为根并提示, 不询问; 随时可用 `sweep-nm init` 重进向导。
 
 > 字段定义以[设计文档](docs/designs/config-and-initialization.md)为准。

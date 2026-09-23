@@ -70,15 +70,25 @@ async function collect(root: string, warnings: string[]): Promise<Candidate[]> {
   return candidates;
 }
 
-/** 后过滤: 排除名单任意一级命中 / .git 子树 / 嵌套 node_modules 只留最外层 */
-function rejected(segments: string[], exclude: Set<string>): boolean {
+/**
+ * 后过滤: 排除名单任意一级命中 / .git 子树 / 嵌套 node_modules 只留最外层 / 白名单未命中。
+ * 白名单判定只看 node_modules 之前的目录级别: 末段是 node_modules 自身, 不构成路径上的一级
+ * (与剪枝候选「进入目录时才判定」的口径一致, 两候选对同一输入须给出同一结论)。
+ */
+function rejected(
+  segments: string[],
+  exclude: Set<string>,
+  include: Set<string>,
+): boolean {
   for (const segment of segments) {
     if (segment === '.git' || exclude.has(segment)) return true;
   }
+  let included = include.size === 0;
   for (let index = 0; index < segments.length - 1; index += 1) {
     if (segments[index] === 'node_modules') return true;
+    if (include.has(segments[index]!)) included = true;
   }
-  return false;
+  return !included;
 }
 
 /** 按 target 码元序升序 (与 Array#sort 默认序一致) */
@@ -91,14 +101,15 @@ function compareTarget(a: ScanHit, b: ScanHit): number {
 export function createNativeScanner(): Scanner {
   return {
     name: 'native',
-    async scan({ roots, exclude }: ScanOptions): Promise<ScanResult> {
+    async scan({ roots, exclude, include }: ScanOptions): Promise<ScanResult> {
       const warnings: string[] = [];
       const excluded = new Set(exclude);
+      const included = new Set(include);
       const hits = new Map<string, ScanHit>();
 
       for (const root of roots) {
         for (const candidate of await collect(root, warnings)) {
-          if (rejected(candidate.segments, excluded)) continue;
+          if (rejected(candidate.segments, excluded, included)) continue;
           // 多根重复与嵌套根按 realpath 去重; realpath 失败 (扫描中被移除) 回退原路径
           const key = await realpath(candidate.target).catch(
             () => candidate.target,

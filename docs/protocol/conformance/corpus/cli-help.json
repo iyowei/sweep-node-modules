@@ -5,6 +5,6 @@
   "run": { "argv": ["--help"] },
   "expect": {
     "exitCode": 0,
-    "stdoutExact": "▍ SWEEP-NM  工作区 node_modules 清理\n\n  sweep-nm                   预览: 清单 + 体积 + 合计, 零副作用\n  sweep-nm --yes             执行删除\n  sweep-nm --exclude <name>  临时追加排除 (可重复, 与配置合并)\n  sweep-nm --config <path>   指定配置文件 (优先于 SWEEP_NM_CONFIG)\n  sweep-nm init              初始化向导: 交互生成配置文件\n  sweep-nm --help            帮助\n\n说明:\n  --exclude 按目录名精确匹配 (区分大小写), 从根到命中点的任意一级命中即跳过\n  默认配置位置 (平台自适应): $FIXTURE/home/.config/sweep-node-modules/config.json\n\n退出码: 0 成功 (含预览与空结果); 1 删除失败 / 配置损坏 / 参数错误\n"
+    "stdoutExact": "▍ SWEEP-NM  工作区 node_modules 清理\n\n  sweep-nm                   预览: 清单 + 体积 + 合计, 零副作用\n  sweep-nm --yes             执行删除\n  sweep-nm --exclude <name>  临时追加排除 (可重复, 与配置合并)\n  sweep-nm --include <name>  只清理命中名单的目录 (可重复, 与配置合并)\n  sweep-nm --config <path>   指定配置文件 (优先于 SWEEP_NM_CONFIG)\n  sweep-nm init              初始化向导: 交互生成配置文件\n  sweep-nm --help            帮助\n\n说明:\n  --exclude 按目录名精确匹配 (区分大小写), 从根到命中点的任意一级命中即跳过\n  --include 同款匹配口径, 命中才纳入; 同时命中 exclude 的照旧跳过\n  默认配置位置 (平台自适应): $FIXTURE/home/.config/sweep-node-modules/config.json\n\n退出码: 0 成功 (含预览与空结果); 1 删除失败 / 配置损坏 / 参数错误\n"
   }
 }

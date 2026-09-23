@@ -9,7 +9,7 @@
 | ----------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | 行为契约    | [`behavior-contract.md`](behavior-contract.md)                                                     | 编号条款 (BC-* / OF-* / EC-*), 语料 `specRefs` 的背书目标                                     |
 | 语料 schema | [`conformance/corpus.schema.json`](conformance/corpus.schema.json)                                 | 金样本字段语义的权威 (验收器的手写校验是其物化子集)                                           |
-| 金样本语料  | [`conformance/corpus/`](conformance/corpus/)                                                       | 40 条; 每条期望必须能由条款 + fixture 尺寸推演辩护                                            |
+| 金样本语料  | [`conformance/corpus/`](conformance/corpus/)                                                       | 44 条; 每条期望必须能由条款 + fixture 尺寸推演辩护                                            |
 | 覆盖表      | [`conformance/coverage.md`](conformance/coverage.md)                                               | 条款 × 语料覆盖 + 变异自证结果                                                                |
 | 验收器      | [`../../scripts/transcription/run-conformance.ts`](../../scripts/transcription/run-conformance.ts) | 确定性、零 AI、语言中立 (被测命令是参数)                                                      |
 | 变异生成器  | [`../../scripts/transcription/make-mutants.ts`](../../scripts/transcription/make-mutants.ts)       | 反向验收自证件 (语料抓不住 mutant 即语料盲区)                                                 |
@@ -26,7 +26,7 @@
    bun scripts/transcription/run-conformance.ts --target "<你的可执行命令>"
    ```
 
-   40 条全绿且快照类逐字节一致, 才算等价;
+   44 条全绿且快照类逐字节一致, 才算等价;
 
 4. 语料抓不住你实现里的哪块, 不是「没问题」, 是语料盲区: 对照 [`conformance/coverage.md`](conformance/coverage.md) 的豁免理由逐条核对。
 

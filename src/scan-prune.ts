@@ -1,6 +1,7 @@
 /**
  * 候选 A: 手写剪枝递归 —— 命中 node_modules 即记录并停止下钻 (嵌套天然解决);
- * 排除名单与 .git 在进入目录时判定; 符号链接不跟进; 命中按 realpath 去重、按 target 升序输出。
+ * 排除名单与 .git 在进入目录时判定; 白名单自命中的那一级起对整棵子树生效 (更深层的同名不再重复判定);
+ * 符号链接不跟进; 命中按 realpath 去重、按 target 升序输出。
  */
 import type { Dirent } from 'node:fs';
 import { readdir, realpath } from 'node:fs/promises';
@@ -28,13 +29,13 @@ export function createPruningScanner(): Scanner {
      * ### 数据追踪示例
      *
      * ```text
-     * Input (roots = ['/w'], exclude = ['container'])
+     * Input (roots = ['/w'], exclude = ['container'], include = [])
      *   磁盘树 = /w/container/beta/node_modules, /w/alpha/node_modules/dep/node_modules
      *
      * 步骤 1: 根按 realpath 去重 (重复根、嵌套根只遍历一次)
      *   待遍历根 = ['/w']
      *
-     * 步骤 2: 递归下探, 进入目录时判定 exclude 与 .git
+     * 步骤 2: 递归下探, 进入目录时判定 exclude 与 .git (include 为空, 白名单不过滤)
      *   /w/container -> 名字命中 exclude, 整棵子树跳过
      *   /w/alpha -> 见 node_modules, 记录后剪枝 (内层 dep/node_modules 不再下探)
      *
@@ -48,6 +49,7 @@ export function createPruningScanner(): Scanner {
     async scan(options: ScanOptions): Promise<ScanResult> {
       const warnings: string[] = [];
       const exclude = new Set(options.exclude);
+      const include = new Set(options.include);
       /** 去重键 = target 的 realpath; 值为对外输出 (target 保留调用方拼写, 不被 realpath 改写) */
       const hitsByRealTarget = new Map<string, ScanHit>();
 
@@ -66,7 +68,8 @@ export function createPruningScanner(): Scanner {
       }
 
       // 热路径 = 目录遍历: 单次 readdir withFileTypes 取类型, 免逐个 lstat
-      const walk = async (dir: string): Promise<void> => {
+      // included: 自根到本目录的路径上是否已命中白名单 (白名单为空时开局即真)
+      const walk = async (dir: string, included: boolean): Promise<void> => {
         let entries: Dirent[];
         try {
           entries = await readdir(dir, { withFileTypes: true });
@@ -81,7 +84,9 @@ export function createPruningScanner(): Scanner {
 
           const name = entry.name;
           if (name === NODE_MODULES) {
-            // 命中即剪枝, 不下钻; realpath 仅作去重键, 失败时退回字面路径
+            // 命中即剪枝, 不下钻; 白名单非空且本路径一级未命中时不记录 (排除已在上级剪掉)
+            if (!included) continue;
+            // realpath 仅作去重键, 失败时退回字面路径
             const target = join(dir, name);
             const key = await realpath(target).catch(() => target);
             if (!hitsByRealTarget.has(key))
@@ -90,12 +95,12 @@ export function createPruningScanner(): Scanner {
           }
           if (name === GIT_DIR || exclude.has(name)) continue;
 
-          await walk(join(dir, name));
+          await walk(join(dir, name), included || include.has(name));
         }
       };
 
       for (const root of roots) {
-        await walk(root);
+        await walk(root, include.size === 0);
       }
 
       const hits = [...hitsByRealTarget.values()].sort(compareTarget);

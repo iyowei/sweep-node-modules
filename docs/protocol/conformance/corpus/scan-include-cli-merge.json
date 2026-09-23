@@ -1,0 +1,28 @@
+{
+  "id": "scan-include-cli-merge",
+  "specRefs": ["BC-31", "OF-03"],
+  "fixture": {
+    "projects": [
+      { "dir": "zone/self/proj" },
+      { "dir": "zone/kits/app" },
+      { "dir": "zone/other/gone" }
+    ]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"include\": [\"self\"]\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "argv": ["--include", "kits"],
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/zone\n  ▒ 8 KB  app     $FIXTURE/zone/kits/app\n  ▒ 8 KB  proj    $FIXTURE/zone/self/proj\n  █ 合计 2 处 · 16 KB   加 --yes 执行删除\n",
+    "stdoutMustNotContain": ["gone"]
+  }
+}

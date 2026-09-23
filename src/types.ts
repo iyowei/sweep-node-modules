@@ -8,6 +8,11 @@ export interface ScanOptions {
   roots: string[];
   /** 排除名单: 目录名; 从根到命中点的任意一级命中即整棵子树跳过 */
   exclude: string[];
+  /**
+   * 包含名单 (白名单): 目录名; 从根到 node_modules 的任意一级命中即纳入。
+   * 空数组 = 不过滤 (全部纳入); 与 exclude 同时命中时 exclude 优先 (先按白名单筛候选, 再排掉命中排除的)。
+   */
+  include: string[];
 }
 
 export interface ScanHit {
@@ -28,6 +33,12 @@ export interface ScanResult {
    * 胜出门面 (parallel) 必须提供; 历史候选可缺省。
    */
   excludeMatches?: { name: string; hits: number }[];
+  /**
+   * 包含名单命中统计 (名称 → 因该名纳入的子树数); 未命中的名称也在列 (hits === 0)。
+   * 性质: 与 excludeMatches 同款的名单反馈通道, 后果却更重: 白名单写错名字时扫描结果直接为空,
+   * 更不能静默。胜出门面 (parallel) 必须提供; 历史候选可缺省。
+   */
+  includeMatches?: { name: string; hits: number }[];
 }
 
 export interface Scanner {

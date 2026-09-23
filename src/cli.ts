@@ -11,7 +11,7 @@ import {
   type Config,
   type ResolvedConfigPath,
   loadResolvedConfig,
-  mergeExcludes,
+  mergeNames,
   resolveConfigPath,
 } from './config.ts';
 import { type RemovalResult, removeTargets } from './delete.ts';
@@ -33,6 +33,8 @@ interface CliOptions {
   yes: boolean;
   /** `--exclude` 可重复, 与配置名单合并 */
   exclude: string[];
+  /** `--include` 可重复, 与配置名单合并 */
+  include: string[];
   /** `--config` 旗标值 (配置路径的最高优先级来源) */
   config?: string;
   help: boolean;
@@ -42,19 +44,19 @@ type ParseOutcome =
   { ok: true; options: CliOptions } | { ok: false; message: string };
 
 /**
- * 解析参数: `--yes` / `--exclude <name>` / `--config <path>` / `--help` 与 `init` 子命令;
- * 未知参数、旗标缺值、多余位置参数一律判错 (调用方落退出码 1)。
+ * 解析参数: `--yes` / `--exclude <name>` / `--include <name>` / `--config <path>` / `--help`
+ * 与 `init` 子命令; 未知参数、旗标缺值、多余位置参数一律判错 (调用方落退出码 1)。
  *
  * ### 数据追踪示例
  * ```text
  * Input（真实 Payload）
- *   argv = ['--exclude', 'my-kits', '--yes']
+ *   argv = ['--exclude', 'my-kits', '--include', 'self', '--yes']
  *
  * 步骤 1：逐项识别
- *   --exclude 收值 'my-kits'; --yes 置位; 无位置参数
+ *   --exclude 收值 'my-kits'; --include 收值 'self'; --yes 置位; 无位置参数
  *
  * Output（数据契约）
- *   return { ok: true, options: { command: 'sweep', yes: true, exclude: ['my-kits'], help: false } }
+ *   return { ok: true, options: { command: 'sweep', yes: true, exclude: ['my-kits'], include: ['self'], help: false } }
  * ```
  */
 function parseArgs(argv: string[]): ParseOutcome {
@@ -62,6 +64,7 @@ function parseArgs(argv: string[]): ParseOutcome {
     command: 'sweep',
     yes: false,
     exclude: [],
+    include: [],
     help: false,
   };
   const positionals: string[] = [];
@@ -78,12 +81,13 @@ function parseArgs(argv: string[]): ParseOutcome {
       options.help = true;
       continue;
     }
-    if (arg === '--exclude' || arg === '--config') {
+    if (arg === '--exclude' || arg === '--include' || arg === '--config') {
       const value = argv[index + 1];
       if (value === undefined || value.startsWith('-')) {
         return { ok: false, message: `参数 ${arg} 缺少取值` };
       }
       if (arg === '--exclude') options.exclude.push(value);
+      else if (arg === '--include') options.include.push(value);
       else options.config = value;
       index += 1;
       continue;
@@ -142,12 +146,17 @@ function helpText(color: boolean): string {
     row('sweep-nm', '预览: 清单 + 体积 + 合计, 零副作用'),
     row('sweep-nm --yes', '执行删除'),
     row('sweep-nm --exclude <name>', '临时追加排除 (可重复, 与配置合并)'),
+    row(
+      'sweep-nm --include <name>',
+      '只清理命中名单的目录 (可重复, 与配置合并)',
+    ),
     row('sweep-nm --config <path>', '指定配置文件 (优先于 SWEEP_NM_CONFIG)'),
     row('sweep-nm init', '初始化向导: 交互生成配置文件'),
     row('sweep-nm --help', '帮助'),
     '',
     '说明:',
     '  --exclude 按目录名精确匹配 (区分大小写), 从根到命中点的任意一级命中即跳过',
+    '  --include 同款匹配口径, 命中才纳入; 同时命中 exclude 的照旧跳过',
     `  默认配置位置 (平台自适应): ${defaultConfigPath()}`,
     '',
     '退出码: 0 成功 (含预览与空结果); 1 删除失败 / 配置损坏 / 参数错误',
@@ -202,7 +211,7 @@ interface ResolvedConfig {
  *   loadResolvedConfig → { state: 'absent' }
  *
  * 步骤 2：非交互 → 以当前目录为根并标记回退态
- *   return { config: { roots: ['/Users/iyowei/workspace/development'], exclude: [] }, fallback: true }
+ *   return { config: { roots: ['/Users/iyowei/workspace/development'], exclude: [], include: [] }, fallback: true }
  *
  * Output（数据契约）
  *   return ResolvedConfig (向导取消 / 拒绝覆盖时 return null, 本次不启动清理)
@@ -216,13 +225,14 @@ async function resolveConfig(
 
   if (!interactive())
     return {
-      config: { roots: [process.cwd()], exclude: [] },
+      config: { roots: [process.cwd()], exclude: [], include: [] },
       source: 'fallback',
     };
 
   const result = await runWizard(resolved.path);
   if (result.state === 'written' && result.config !== undefined) {
-    return { config: result.config, source: 'wizard' };
+    // 向导只问扫描根与排除名单 (设计: config-and-initialization.md), 白名单按缺省语义补空数组
+    return { config: { ...result.config, include: [] }, source: 'wizard' };
   }
 
   print('配置未写入, 本次未执行清理');
@@ -303,24 +313,36 @@ function withOutcomes(
   }));
 }
 
-/** 排除名单命中统计 (字段可选, 胜出门面提供) */
-type ExcludeMatches = NonNullable<ScanResult['excludeMatches']>;
+/** 名单命中统计 (字段可选, 胜出门面提供; 排除与包含同形) */
+type NameMatches = NonNullable<ScanResult['excludeMatches']>;
 
 /**
- * 排除名反馈 (破坏性动作的保命名单通道, 见 types.ts「excludeMatches」):
+ * 名单反馈 (名单写错不得静默, 见 types.ts「excludeMatches」与「includeMatches」):
  * 未命中的名字一律告警 (名字打错不得静默); 命中的只在真终端补一行确认, 非 TTY 下不增噪音。
+ * 排除名写错只是少排除 (多排除 = 少删, 错在安全侧), 包含名写错则整个筛选为空,
+ * 故白名单全零命中时另补一句后果说明。
  */
-function reportExcludeMatches(
-  matches: ExcludeMatches | undefined,
+function reportNameMatches(
+  excludeMatches: NameMatches | undefined,
+  includeMatches: NameMatches | undefined,
   color: boolean,
 ): void {
-  if (matches === undefined) return;
   const tty = process.stderr.isTTY === true;
-  for (const item of matches) {
+  for (const item of excludeMatches ?? []) {
     if (item.hits === 0)
       warn(`排除名未匹配到任何目录: ${item.name} (按目录名精确匹配)`, color);
     else if (tty) notice(`排除生效: ${item.name} (${item.hits} 处)`);
   }
+
+  const includes = includeMatches ?? [];
+  for (const item of includes) {
+    if (item.hits === 0)
+      warn(`包含名未匹配到任何目录: ${item.name} (按目录名精确匹配)`, color);
+    else if (tty) notice(`包含生效: ${item.name} (${item.hits} 处)`);
+  }
+  // 逐名告警已在上方给出, 此处点明整体后果: 白名单一条都没命中, 本次必然什么都扫不出
+  if (includes.length > 0 && includes.every((item) => item.hits === 0))
+    warn('包含名单无一条命中, 本次扫描必为空结果 (请核对名字与大小写)', color);
 }
 
 /**
@@ -369,8 +391,8 @@ function toEntries(hits: ScanHit[], sizeResult: SizeResult): RenderEntry[] {
  * ### 数据追踪示例
  * ```text
  * Input（真实 Payload）
- *   config = { roots: ['/w'], exclude: [] }
- *   options = { command: 'sweep', yes: true, exclude: [], help: false }
+ *   config = { roots: ['/w'], exclude: [], include: [] }
+ *   options = { command: 'sweep', yes: true, exclude: [], include: [], help: false }
  *   磁盘树 = /w/alpha/node_modules (4.6 GB, 可读), /w/locked/node_modules (权限不足, 测不到体积)
  *
  * 步骤 1：扫描 + 实测体积 (测不到的以占位行上清单, 不再静默移出)
@@ -392,11 +414,16 @@ async function sweep(
   color: boolean,
 ): Promise<number> {
   const roots = config.roots;
-  const exclude = mergeExcludes(config.exclude, options.exclude);
+  const exclude = mergeNames(config.exclude, options.exclude);
+  const include = mergeNames(config.include, options.include);
 
-  const scanResult = await createScanner().scan({ roots, exclude });
+  const scanResult = await createScanner().scan({ roots, exclude, include });
   for (const warning of scanResult.warnings) warn(warning, color);
-  reportExcludeMatches(scanResult.excludeMatches, color);
+  reportNameMatches(
+    scanResult.excludeMatches,
+    scanResult.includeMatches,
+    color,
+  );
 
   const sizeResult = await createSizer().measure(
     scanResult.hits.map((hit) => hit.target),

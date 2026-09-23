@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import {
   loadConfig,
   loadResolvedConfig,
-  mergeExcludes,
+  mergeNames,
   resolveConfigPath,
 } from './config.ts';
 
@@ -132,24 +132,24 @@ describe('config 契约: 装载 (loadConfig)', () => {
   test('ok: 合法配置按原样读出', async () => {
     const path = await writeConfig(
       'config.json',
-      JSON.stringify({ roots: ['/a', '/b'], exclude: ['x'] }),
+      JSON.stringify({ roots: ['/a', '/b'], exclude: ['x'], include: ['y'] }),
     );
 
     expect(await loadConfig(path)).toEqual({
       state: 'ok',
-      config: { roots: ['/a', '/b'], exclude: ['x'] },
+      config: { roots: ['/a', '/b'], exclude: ['x'], include: ['y'] },
     });
   });
 
-  test('ok: 空数组合法 (排除名单可留空)', async () => {
+  test('ok: 空数组合法 (排除与包含名单均可留空)', async () => {
     const path = await writeConfig(
       'config.json',
-      JSON.stringify({ roots: ['/a'], exclude: [] }),
+      JSON.stringify({ roots: ['/a'], exclude: [], include: [] }),
     );
 
     expect(await loadConfig(path)).toEqual({
       state: 'ok',
-      config: { roots: ['/a'], exclude: [] },
+      config: { roots: ['/a'], exclude: [], include: [] },
     });
   });
 
@@ -235,6 +235,30 @@ describe('config 契约: 装载 (loadConfig)', () => {
     );
   });
 
+  test('损坏: include 类型错 (非数组), 报错指明实际类型', async () => {
+    const path = await writeConfig(
+      'config.json',
+      JSON.stringify({ roots: ['/a'], include: 'x' }),
+    );
+
+    await expect(loadConfig(path)).rejects.toThrow(
+      'include 应为字符串数组 (实际: string)',
+    );
+  });
+
+  test('损坏: include 元素类型错, 报错指名位置与实际类型', async () => {
+    const path = await writeConfig(
+      'config.json',
+      JSON.stringify({ roots: ['/a'], include: ['ok', 42] }),
+    );
+
+    const failure = loadConfig(path);
+    await expect(failure).rejects.toThrow(path);
+    await expect(failure).rejects.toThrow(
+      'include 第 2 项应为字符串 (实际: number)',
+    );
+  });
+
   test('损坏: 顶层非对象 (数组 / null), 报错指明实际类型', async () => {
     const asArray = await writeConfig('array.json', '[]');
     await expect(loadConfig(asArray)).rejects.toThrow(
@@ -247,7 +271,7 @@ describe('config 契约: 装载 (loadConfig)', () => {
     );
   });
 
-  test('ok: 缺 exclude 字段默认空数组 (自然极简配置)', async () => {
+  test('ok: 缺 exclude / include 字段默认空数组 (自然极简配置)', async () => {
     const path = await writeConfig(
       'config.json',
       JSON.stringify({ roots: ['/a'] }),
@@ -255,7 +279,7 @@ describe('config 契约: 装载 (loadConfig)', () => {
 
     expect(await loadConfig(path)).toEqual({
       state: 'ok',
-      config: { roots: ['/a'], exclude: [] },
+      config: { roots: ['/a'], exclude: [], include: [] },
     });
   });
 });
@@ -290,7 +314,7 @@ describe('config 契约: 显式来源缺失报错 (loadResolvedConfig)', () => {
     expect(await loadResolvedConfig(resolved)).toEqual({ state: 'absent' });
   });
 
-  test('显式来源: 文件存在时正常装载 (含 exclude 缺省)', async () => {
+  test('显式来源: 文件存在时正常装载 (含 exclude / include 缺省)', async () => {
     const path = await writeConfig(
       'config.json',
       JSON.stringify({ roots: ['/a'] }),
@@ -300,28 +324,28 @@ describe('config 契约: 显式来源缺失报错 (loadResolvedConfig)', () => {
       await loadResolvedConfig(resolveConfigPath({ ...base, flag: path })),
     ).toEqual({
       state: 'ok',
-      config: { roots: ['/a'], exclude: [] },
+      config: { roots: ['/a'], exclude: [], include: [] },
     });
   });
 });
 
-describe('config 契约: 合并 (mergeExcludes)', () => {
+describe('config 契约: 合并 (mergeNames)', () => {
   test('追加与去重: 配置在前, 命令行在后, 保序', () => {
     expect(
-      mergeExcludes(['my-kits', 'url-tool'], ['url-tool', 'docs-site']),
+      mergeNames(['my-kits', 'url-tool'], ['url-tool', 'docs-site']),
     ).toEqual(['my-kits', 'url-tool', 'docs-site']);
   });
 
   test('空输入与配置自身重复一并归并', () => {
-    expect(mergeExcludes([], [])).toEqual([]);
-    expect(mergeExcludes(['a', 'a'], ['a'])).toEqual(['a']);
+    expect(mergeNames([], [])).toEqual([]);
+    expect(mergeNames(['a', 'a'], ['a'])).toEqual(['a']);
   });
 
   test('不改动入参', () => {
     const config = ['a'];
     const cli = ['b'];
 
-    mergeExcludes(config, cli);
+    mergeNames(config, cli);
 
     expect(config).toEqual(['a']);
     expect(cli).toEqual(['b']);

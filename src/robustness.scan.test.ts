@@ -45,7 +45,11 @@ for (const scanner of candidates) {
       const chain = Array.from({ length: 200 }, (_, i) => `d${i}`).join('/');
       const { root } = await make({ projects: [{ dir: `${chain}/leaf` }] });
 
-      const { hits } = await scanner.scan({ roots: [root], exclude: [] });
+      const { hits } = await scanner.scan({
+        roots: [root],
+        exclude: [],
+        include: [],
+      });
 
       expect(hits).toHaveLength(1);
       expect(hits[0]?.target.endsWith(join('leaf', 'node_modules'))).toBe(true);
@@ -59,7 +63,11 @@ for (const scanner of candidates) {
         await writeFile(join(bulk, `f-${i}.txt`), 'x');
       }
 
-      const { hits } = await scanner.scan({ roots: [root], exclude: [] });
+      const { hits } = await scanner.scan({
+        roots: [root],
+        exclude: [],
+        include: [],
+      });
 
       expect(hits.map((hit) => hit.project)).toEqual([join(root, 'alpha')]);
     });
@@ -69,7 +77,11 @@ for (const scanner of candidates) {
         projects: [{ dir: "怪异 目录/proj 🔥 'quoted'" }],
       });
 
-      const { hits } = await scanner.scan({ roots: [root], exclude: [] });
+      const { hits } = await scanner.scan({
+        roots: [root],
+        exclude: [],
+        include: [],
+      });
 
       expect(hits).toHaveLength(1);
       expect(hits[0]?.target).toBe(
@@ -87,7 +99,11 @@ for (const scanner of candidates) {
         ],
       });
 
-      const { hits } = await scanner.scan({ roots: [root], exclude: [] });
+      const { hits } = await scanner.scan({
+        roots: [root],
+        exclude: [],
+        include: [],
+      });
 
       expect(hits.map((hit) => hit.project)).toEqual([join(root, 'alpha')]);
     });
@@ -97,7 +113,11 @@ for (const scanner of candidates) {
       await mkdir(join(root, 'weird'), { recursive: true });
       await writeFile(join(root, 'weird', 'node_modules'), 'i am a file');
 
-      const { hits } = await scanner.scan({ roots: [root], exclude: [] });
+      const { hits } = await scanner.scan({
+        roots: [root],
+        exclude: [],
+        include: [],
+      });
 
       expect(hits).toEqual([]);
     });
@@ -106,7 +126,11 @@ for (const scanner of candidates) {
       const { root } = await make({ projects: [{ dir: 'alpha' }] });
       const ghost = join(root, 'ghost-root');
 
-      const result = await scanner.scan({ roots: [root, ghost], exclude: [] });
+      const result = await scanner.scan({
+        roots: [root, ghost],
+        exclude: [],
+        include: [],
+      });
 
       expect(result.warnings.length).toBeGreaterThan(0);
       expect(result.warnings.some((warning) => warning.includes(ghost))).toBe(
@@ -132,6 +156,7 @@ describe('鲁棒性 [parallel] 根病因分流', () => {
     const result = await createParallelScanner().scan({
       roots: [file],
       exclude: [],
+      include: [],
     });
 
     expect(result.hits).toEqual([]);
@@ -147,6 +172,7 @@ describe('鲁棒性 [parallel] 根病因分流', () => {
     const result = await createParallelScanner().scan({
       roots: [throughFile],
       exclude: [],
+      include: [],
     });
 
     expect(result.warnings).toEqual([`根不是目录, 已跳过: ${throughFile}`]);
@@ -161,6 +187,7 @@ describe('鲁棒性 [parallel] 根病因分流', () => {
       const result = await createParallelScanner().scan({
         roots: [underSealed],
         exclude: [],
+        include: [],
       });
 
       expect(result.hits).toEqual([]);
@@ -180,6 +207,7 @@ describe('鲁棒性 [parallel] 根病因分流', () => {
     const result = await createParallelScanner().scan({
       roots: [loop],
       exclude: [],
+      include: [],
     });
 
     // 本机 (darwin) 自指符号链接实报 ELOOP; 换平台若报别的码, 失败信息即带出实际值

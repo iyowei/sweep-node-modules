@@ -80,9 +80,10 @@ function writeConfig(
   workspace: Workspace,
   roots: string[],
   exclude: string[] = [],
+  include: string[] = [],
 ): string {
   const file = join(workspace.root, 'sweep-config.json');
-  writeFileSync(file, JSON.stringify({ roots, exclude }));
+  writeFileSync(file, JSON.stringify({ roots, exclude, include }));
   return file;
 }
 
@@ -219,6 +220,58 @@ function definePreviewCases(runner: string, available: boolean): void {
       },
     );
 
+    test.skipIf(!available)(
+      '--include 可重复且与配置合并: 只列出白名单命中的项',
+      async () => {
+        const workspace = await make({
+          projects: [
+            { dir: 'alpha' },
+            { dir: 'beta' },
+            { dir: 'gamma' },
+            { dir: 'delta' },
+          ],
+        });
+        const config = writeConfig(workspace, [workspace.root], [], ['alpha']);
+
+        const result = runCli(
+          runner,
+          ['--include', 'beta', '--include', 'gamma'],
+          {
+            env: { SWEEP_NM_CONFIG: config },
+          },
+        );
+
+        expect(result.status).toBe(0);
+        for (const name of ['alpha', 'beta', 'gamma'])
+          expect(result.stdout).toContain(name);
+        expect(result.stdout).not.toContain('delta');
+      },
+    );
+
+    test.skipIf(!available)(
+      '--include 未命中: stderr 警示白名单未生效且结果为空',
+      async () => {
+        const workspace = await make({ projects: [{ dir: 'alpha' }] });
+        const config = writeConfig(
+          workspace,
+          [workspace.root],
+          [],
+          ['typo-name'],
+        );
+
+        const result = runCli(runner, [], { env: { SWEEP_NM_CONFIG: config } });
+
+        expect(result.status).toBe(0);
+        expect(result.stderr).toContain('包含名未匹配到任何目录: typo-name');
+        // 与排除名写错的后果不同: 白名单全零命中直接意味着扫不出东西, 须点明
+        expect(result.stderr).toContain(
+          '包含名单无一条命中, 本次扫描必为空结果',
+        );
+        expect(result.stdout).toContain('未发现');
+        expect(result.stdout).not.toContain('包含名未匹配');
+      },
+    );
+
     test.skipIf(!available)('--yes 执行: 目标删除且邻居完好', async () => {
       const workspace = await make({ projects: [{ dir: 'alpha' }] });
       const config = writeConfig(workspace, [workspace.root]);
@@ -273,7 +326,7 @@ function definePreviewCases(runner: string, available: boolean): void {
     );
 
     test.skipIf(!available)(
-      '--help: 退出码 0 且给出默认配置位置与匹配口径',
+      '--help: 退出码 0 且给出默认配置位置与两份名单的匹配口径',
       async () => {
         const result = runCli(runner, ['--help']);
 
@@ -281,7 +334,8 @@ function definePreviewCases(runner: string, available: boolean): void {
         expect(result.stdout).toContain(
           join('sweep-node-modules', 'config.json'),
         );
-        expect(result.stdout).toContain('按目录名精确匹配 (区分大小写)');
+        expect(result.stdout).toContain('--exclude 按目录名精确匹配');
+        expect(result.stdout).toContain('--include 同款匹配口径');
       },
     );
   });

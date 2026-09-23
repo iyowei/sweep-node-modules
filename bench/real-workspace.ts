@@ -23,7 +23,7 @@ export async function runRealWorkspaceBench(): Promise<BenchSample[]> {
   const exclude = ['my-kits'];
 
   const scanStarted = performance.now();
-  const { hits } = await scanner.scan({ roots: [root], exclude });
+  const { hits } = await scanner.scan({ roots: [root], exclude, include: [] });
   const scanMs = performance.now() - scanStarted;
 
   const samples: BenchSample[] = [

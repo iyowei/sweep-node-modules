@@ -331,6 +331,7 @@ export async function runStressBench(label: string): Promise<StressSample[]> {
       const options: ScanOptions = {
         roots: setup.roots,
         exclude: setup.exclude,
+        include: [],
       };
       const scale = describeScale(setup.scale);
       console.log(`\n[${shape.case}] ${shape.note} (${scale})`);

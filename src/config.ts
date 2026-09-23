@@ -11,6 +11,8 @@ export interface Config {
   roots: string[];
   /** 排除名单: 从根到命中点的任意一级目录名命中即跳过 */
   exclude: string[];
+  /** 包含名单 (白名单): 从根到 node_modules 的任意一级目录名命中才纳入; 空数组 = 不过滤 */
+  include: string[];
 }
 
 /** 配置路径来源 */
@@ -127,7 +129,7 @@ function fieldError(
 
 /**
  * 配置形状校验 (最小口径, 只校验类型不校验语义): 顶层须为非数组对象;
- * roots 必填, exclude 可缺省 (视为 []); 返回首个错误原因 (逐字段具体), 通过返回 null。
+ * roots 必填, exclude / include 均可缺省 (视为 []); 返回首个错误原因 (逐字段具体), 通过返回 null。
  */
 function shapeError(value: unknown): string | null {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -136,7 +138,9 @@ function shapeError(value: unknown): string | null {
   const candidate = value as Record<string, unknown>;
   const rootsError = fieldError(candidate, 'roots', false);
   if (rootsError !== null) return rootsError;
-  return fieldError(candidate, 'exclude', true);
+  const excludeError = fieldError(candidate, 'exclude', true);
+  if (excludeError !== null) return excludeError;
+  return fieldError(candidate, 'include', true);
 }
 
 /**
@@ -152,11 +156,11 @@ function shapeError(value: unknown): string | null {
  *   text = '{"roots":["/a"],"exclude":["x"]}'
  *   *(ENOENT 时提前返回 { state: 'absent' }, 其余读取失败立即抛错)*
  *
- * 步骤 2：JSON 解析 + 形状校验 (roots 须为字符串数组, exclude 缺省视为 [])
+ * 步骤 2：JSON 解析 + 形状校验 (roots 须为字符串数组, exclude / include 缺省视为 [])
  *   data = { roots: ['/a'], exclude: ['x'] }
  *
  * Output（数据契约）
- *   return { state: 'ok', config: { roots: ['/a'], exclude: ['x'] } }
+ *   return { state: 'ok', config: { roots: ['/a'], exclude: ['x'], include: [] } }
  * ```
  */
 export async function loadConfig(path: string): Promise<LoadConfigResult> {
@@ -183,11 +187,19 @@ export async function loadConfig(path: string): Promise<LoadConfigResult> {
     throw new Error(`配置损坏 (${path}): ${error}`);
   }
 
-  // 形状已保证: roots 为字符串数组, exclude 缺省补空数组
-  const raw = data as { roots: string[]; exclude?: string[] };
+  // 形状已保证: roots 为字符串数组, exclude / include 缺省补空数组
+  const raw = data as {
+    roots: string[];
+    exclude?: string[];
+    include?: string[];
+  };
   return {
     state: 'ok',
-    config: { roots: raw.roots, exclude: raw.exclude ?? [] },
+    config: {
+      roots: raw.roots,
+      exclude: raw.exclude ?? [],
+      include: raw.include ?? [],
+    },
   };
 }
 
@@ -207,10 +219,10 @@ export async function loadResolvedConfig(
   return result;
 }
 
-/** 合并排除名单: 配置名单在前、命令行追加在后, 跨来源去重 (保留首见顺序) */
-export function mergeExcludes(
-  configExclude: string[],
-  cliExclude: string[],
+/** 合并名单 (排除与包含共用): 配置名单在前、命令行追加在后, 跨来源去重 (保留首见顺序) */
+export function mergeNames(
+  configNames: string[],
+  cliNames: string[],
 ): string[] {
-  return [...new Set([...configExclude, ...cliExclude])];
+  return [...new Set([...configNames, ...cliNames])];
 }

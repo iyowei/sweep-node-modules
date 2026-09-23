@@ -131,8 +131,8 @@ const MUTANTS: MutantSpec[] = [
     patches: [
       {
         file: 'size-du.ts',
-        find: '    sizes.set(match[2], Number(match[1]) * 1024);',
-        replace: '    sizes.set(match[2], Number(match[1]) * 1000);',
+        find: '    sizes.set(path, Number(sizeKiB) * 1024);',
+        replace: '    sizes.set(path, Number(sizeKiB) * 1000);',
         effect: 'du 的 Ki 单位换算错误 (1024 → 1000), 展示体积全线偏移',
       },
     ],

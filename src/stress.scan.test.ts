@@ -104,7 +104,7 @@ describe('长跑压力 [scan-prune / scan-parallel]', () => {
       });
     });
 
-    options = { roots: [workspace.root], exclude: [] };
+    options = { roots: [workspace.root], exclude: [], include: [] };
   }, TEST_TIMEOUT_MS);
 
   afterAll(async () => {

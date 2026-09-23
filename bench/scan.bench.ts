@@ -44,13 +44,13 @@ async function timeScan(
   exclude: string[],
   iterations: number,
 ) {
-  await scanner.scan({ roots, exclude }); // 预热
+  await scanner.scan({ roots, exclude, include: [] }); // 预热
   const heapBefore = process.memoryUsage().heapUsed;
   const times: number[] = [];
   let hits = 0;
   for (let i = 0; i < iterations; i += 1) {
     const started = performance.now();
-    const result = await scanner.scan({ roots, exclude });
+    const result = await scanner.scan({ roots, exclude, include: [] });
     times.push(performance.now() - started);
     hits = result.hits.length;
   }

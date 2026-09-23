@@ -19,6 +19,7 @@
 sweep-nm                    预览: 清单 + 体积 + 合计, 零副作用
 sweep-nm --yes              执行删除
 sweep-nm --exclude <名字>   临时追加排除, 可重复
+sweep-nm --include <名字>   只清理命中名单的目录, 可重复
 sweep-nm --config <路径>    指定配置文件 (优先于 SWEEP_NM_CONFIG)
 sweep-nm init               初始化向导: 交互式生成配置文件
 sweep-nm --help             帮助

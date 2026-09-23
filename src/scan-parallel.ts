@@ -7,9 +7,10 @@
  *     目录发现只入栈、不就地展开, 杜绝「对子树无界并发」的 promise 爆炸;
  *   - 任务完成时递减计数并再补位; 计数恒等于「栈深 + 在飞」, 归零即本轮结束。
  *
- * 与候选 A 相同的部分: 命中 node_modules 即记录并剪枝; exclude 与 .git 在进入目录时判定;
- * 符号链接不跟进 (Dirent 为 lstat 语义); 命中按 target 的 realpath 去重键去重 (target 保留
- * 调用方拼写); 结尾统一按 target 升序排序后再输出, 与并发完成次序无关, 输出保持确定性。
+ * 与候选 A 相同的部分: 命中 node_modules 即记录并剪枝; exclude / include 与 .git 在进入目录时判定
+ * (include 命中那一级起, 整棵子树随栈上携带的标记一路继承); 符号链接不跟进 (Dirent 为 lstat 语义);
+ * 命中按 target 的 realpath 去重键去重 (target 保留调用方拼写); 结尾统一按 target 升序排序后再输出,
+ * 与并发完成次序无关, 输出保持确定性。
  *
  * 去重键与删除安全闸同源: 取自 guard 的 dedupeKey (win32 折叠大小写), 使 scan 判「两条」与
  * guard 判「重复」不再打架 (大小写双写时 guard 曾逐条拒删, 文案误导)。
@@ -18,9 +19,11 @@
  * 类型判定, 因 realpath 只解析不校验类型 —— 根指向普通文件时会成功返回, 不拦则会由 readdir 的
  * ENOTDIR 落进「目录不可读」, 诱导用户去查权限。
  *
- * exclude 反馈通道 (候选 A 无此字段): 逐名统计「因该名跳过的子树数」, 未命中的名字以 0 保留在列,
- * 顺序同输入名单 — 供破坏性动作在名字打错 / 大小写不符时仍能提示「这条名单没生效」。
- * 计数点在 exclude 判定处, 故 node_modules 命中优先、根自身同名均不计入 (与既有裁决一致)。
+ * 名单反馈通道 (候选 A 无此字段): 逐名统计「因该名跳过的子树数」(exclude) 与「因该名纳入的子树数」
+ * (include), 未命中的名字以 0 保留在列, 顺序同输入名单 — 供破坏性动作在名字打错 / 大小写不符时
+ * 仍能提示「这条名单没生效」; 白名单零命中的后果更重 (筛选结果为空), 同款通道更不可缺。
+ * 计数点在各名单的判定处, 故 node_modules 命中优先、根自身同名均不计入 (与既有裁决一致);
+ * include 的计数点即「该子树由未纳入翻为已纳入」的那一级, 更深层的同名不再重复计。
  *
  * 已知差异 (两套尺子均不约束): warnings 次序为并发完成序, 契约不约束, 亦不等价于 A 的遍历次序。
  * 失败形态: readdir / realpath 的失败照 A 降级为告警; 其余非预期异常取首个、池排空后原样抛出,
@@ -47,6 +50,12 @@ const GIT_DIR = '.git';
  * 256 起回退), 故取平台起点而非更大值: 并发越大, 冷缓存与网络盘上的抖动面越宽。
  */
 const CONCURRENCY = 32;
+
+/** 待遍历目录: 绝对路径 + 自根到该目录的路径上是否已命中白名单 */
+interface Pending {
+  dir: string;
+  included: boolean;
+}
 
 /** 按 target 码元序升序 */
 function compareTarget(a: ScanHit, b: ScanHit): number {
@@ -75,22 +84,45 @@ function describeRootFailure(error: unknown): string {
 }
 
 /**
+ * 单根遍历的共享上下文: 名单判定所需的集合与计数、结果落点与路径风味。
+ * 各根共用同一份 (计数与结果按根累加, 不按根重置); 打包成对象而非逐个传参, 免参数表膨胀。
+ */
+interface WalkContext {
+  style: PathStyle;
+  /** 排除名单: 名字命中即整棵子树跳过 */
+  exclude: Set<string>;
+  /** 排除名的跳过计数 (名字 → 次数), 未命中名同样在列 */
+  excludeCounts: Map<string, number>;
+  /** 包含名单 (白名单): 非空时, 路径一级都未命中的候选不记录 */
+  include: Set<string>;
+  /** 包含名的纳入计数 (名字 → 次数), 未命中名同样在列 */
+  includeCounts: Map<string, number>;
+  /** 去重键 = target 的 realpath; 值为对外输出 (调用方按 target 升序排序后返回) */
+  hits: Map<string, ScanHit>;
+  /** 非致命告警 (不可读目录 / 根预检失败), 不中断扫描 */
+  warnings: string[];
+}
+
+/**
  * 有界并发遍历单个根, 收集其中的 node_modules 命中。
- * 外部副作用：向传入的 hits / warnings 追加命中与告警, 并向 excludeCounts 累加排除名的跳过计数。
+ * 外部副作用：向传入的 hits / warnings 追加命中与告警, 并向 excludeCounts / includeCounts
+ * 分别累加排除名的跳过计数与包含名的纳入计数。
  *
  * hits 以 target 的 realpath 为键去重 (键重复时先到者胜), 因此跨根本序地并发遍历会
  * 让「同一 realpath 的两个拼写」由完成次序裁定; 故各根串行推进, 与候选 A 的先到先得一致。
  */
-async function walkRoot(
-  root: string,
-  style: PathStyle,
-  exclude: Set<string>,
-  excludeCounts: Map<string, number>,
-  hits: Map<string, ScanHit>,
-  warnings: string[],
-): Promise<void> {
+async function walkRoot(root: string, ctx: WalkContext): Promise<void> {
+  const {
+    style,
+    exclude,
+    excludeCounts,
+    include,
+    includeCounts,
+    hits,
+    warnings,
+  } = ctx;
   /** 待遍历目录栈 (LIFO 取子树局部性, pop 为 O(1)) */
-  const stack: string[] = [root];
+  const stack: Pending[] = [{ dir: root, included: include.size === 0 }];
   /** 恒等于「栈深 + 在飞」; 归零即本轮遍历结束 */
   let outstanding = 1;
   /** 当前在飞的任务数, 上限 CONCURRENCY */
@@ -109,9 +141,9 @@ async function walkRoot(
   /** 补齐并发空位; outstanding 归零时释放等待方 */
   function pump(): void {
     while (active < CONCURRENCY && stack.length > 0) {
-      const dir = stack.pop()!;
+      const next = stack.pop()!;
       active += 1;
-      void visit(dir);
+      void visit(next.dir, next.included);
     }
     if (outstanding === 0 && resolveDrained !== null) {
       const resolve = resolveDrained;
@@ -120,7 +152,7 @@ async function walkRoot(
     }
   }
 
-  async function visit(dir: string): Promise<void> {
+  async function visit(dir: string, included: boolean): Promise<void> {
     try {
       let entries: Dirent[];
       try {
@@ -136,7 +168,9 @@ async function walkRoot(
 
         const name = entry.name;
         if (name === NODE_MODULES) {
-          // 命中即剪枝, 不下钻; 去重键走 guard 同源的 dedupeKey (失败时退回字面路径)
+          // 命中即剪枝, 不下钻; 白名单非空且本路径一级未命中时不记录 (排除已在上级剪掉)
+          if (!included) continue;
+          // 去重键走 guard 同源的 dedupeKey (失败时退回字面路径)
           const target = join(dir, name);
           const key = dedupeKey(
             await realpath(target).catch(() => target),
@@ -152,8 +186,14 @@ async function walkRoot(
           continue;
         }
 
+        // 白名单的计数点 = 该子树由未纳入翻为已纳入的那一级 (更深层的同名不再重复计)
+        const childIncluded = included || include.has(name);
+        if (!included && include.has(name)) {
+          includeCounts.set(name, (includeCounts.get(name) ?? 0) + 1);
+        }
+
         // 只入栈, 由 pump 统一分配并发额度; 就地展开会退化为无界递归并发
-        stack.push(join(dir, name));
+        stack.push({ dir: join(dir, name), included: childIncluded });
         outstanding += 1;
       }
     } catch (error) {
@@ -181,13 +221,13 @@ export function createParallelScanner(): Scanner {
      * ### 数据追踪示例
      *
      * ```text
-     * Input (roots = ['/w'], exclude = ['container'])
+     * Input (roots = ['/w'], exclude = ['container'], include = [])
      *   磁盘树 = /w/container/beta/node_modules, /w/alpha/node_modules/dep/node_modules
      *
      * 步骤 1: 根按 realpath 去重 (重复根、嵌套根只遍历一次)
      *   待遍历根 = ['/w']
      *
-     * 步骤 2: 每根一个有界并发池 (并发上限见 CONCURRENCY) 下探, 进入目录时判定 exclude 与 .git
+     * 步骤 2: 每根一个有界并发池 (并发上限见 CONCURRENCY) 下探, 进入目录时判定 exclude / include 与 .git
      *   /w/container -> 名字命中 exclude, 整棵子树跳过
      *   /w/alpha -> 见 node_modules, 记录后剪枝 (内层 dep/node_modules 不再下探)
      *
@@ -197,6 +237,7 @@ export function createParallelScanner(): Scanner {
      *   hits = [{ project: '/w/alpha', target: '/w/alpha/node_modules' }]
      *   warnings = []  // 不可读 / 不存在的路径、根预检失败按病因分流, 在此逐条累积, 不中断
      *   excludeMatches = [{ name: 'container', hits: 1 }]  // 未命中名同样在列, hits 为 0
+     *   includeMatches = []  // 白名单为空时无条目可报 (有名字则同样逐名在列)
      * ```
      */
     async scan(options: ScanOptions): Promise<ScanResult> {
@@ -206,6 +247,12 @@ export function createParallelScanner(): Scanner {
       const excludeCounts = new Map<string, number>();
       for (const name of options.exclude) {
         if (!excludeCounts.has(name)) excludeCounts.set(name, 0);
+      }
+      const include = new Set(options.include);
+      /** 每个 include 名一条计数, 未命中的名字同样预置 0 留在列 (含义同 excludeCounts) */
+      const includeCounts = new Map<string, number>();
+      for (const name of options.include) {
+        if (!includeCounts.has(name)) includeCounts.set(name, 0);
       }
       /** 去重键 = target 的 realpath; 值为对外输出 (target 保留调用方拼写, 不被 realpath 改写) */
       const hitsByRealTarget = new Map<string, ScanHit>();
@@ -233,24 +280,30 @@ export function createParallelScanner(): Scanner {
         roots.push(root);
       }
 
+      const context: WalkContext = {
+        style,
+        exclude,
+        excludeCounts,
+        include,
+        includeCounts,
+        hits: hitsByRealTarget,
+        warnings,
+      };
       for (const root of roots) {
-        await walkRoot(
-          root,
-          style,
-          exclude,
-          excludeCounts,
-          hitsByRealTarget,
-          warnings,
-        );
+        await walkRoot(root, context);
       }
 
       const hits = [...hitsByRealTarget.values()].sort(compareTarget);
-      // 顺序取自输入名单: 未命中的名字同样在列 (hits 0), 供调用方提示「这条排除没生效」
+      // 顺序取自输入名单: 未命中的名字同样在列 (hits 0), 供调用方提示「这条名单没生效」
       const excludeMatches = options.exclude.map((name) => ({
         name,
         hits: excludeCounts.get(name) ?? 0,
       }));
-      return { hits, warnings, excludeMatches };
+      const includeMatches = options.include.map((name) => ({
+        name,
+        hits: includeCounts.get(name) ?? 0,
+      }));
+      return { hits, warnings, excludeMatches, includeMatches };
     },
   };
 }
