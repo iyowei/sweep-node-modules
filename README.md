@@ -6,24 +6,41 @@
 
 ## 要求
 
-- 运行时: 业务逻辑**双运行时** (有 bun 走 bun, 否则 node); 但**启动入口的要求随安装方式不同**:
-  - **npm 安装**: 入口 `bin/sweep-nm.mjs` 的 shebang 是 node, npm 生成的 shim 按它选解释器, 故**需有 node** (npm 用户必然满足); 有 bun 时仍优先用 bun 跑业务逻辑。
-  - **`bun install -g`**: 与上面同一条约束 (bun 的全局安装同样生成指向该文件的符号链接, 执行时仍由内核读 shebang), 故**同样需有 node**。
-  - **`bunx @iyowei/sweep-node-modules`**: **不经 shebang** (bunx 直接由 bun 执行目标文件), **只有 bun 的机器可用**, 是免装 node 的运行方式。
-  - **从源码使用**: 入口是 sh / cmd 启动器 (由系统 shell 执行, 不依赖 node), 装 **bun 或 node 任一**即可。
-- 取最新一代运行时 API: bun 任意近期版本; node 需原生支持 TypeScript 直跑的版本 (从源码运行受此约束; npm 安装拿到的是编译产物 JS, 跑 JS 不必 TS 直跑能力, 但两种获取方式取同一版本下限; 版本快照与实测记录见 [ADR 0006](docs/adrs/0006-dual-runtime-bun-first.md))。
+- 业务逻辑**双运行时**: 有 bun 走 bun, 否则 node (功能一致, bun 启动更快)。
+- 取最新一代运行时 API: bun 任意近期版本; node 需原生支持 TypeScript 直跑的版本 (两种获取方式取同一版本下限; 版本快照与实测记录见 [ADR 0006](docs/adrs/0006-dual-runtime-bun-first.md))。
 - 零第三方运行时依赖 (只用运行时内置能力)。
 - 平台: Windows / macOS / Linux 三平台均可运行 (见 [ADR 0007](docs/adrs/0007-platform-portability.md))。
 
 ## 安装
 
-**npm** (推荐):
+三种方式, 按你机器上已有的运行时挑。**每条下的「需要」是硬门槛**:
+
+### ① 免安装 (试用或偶尔用)
+
+```shell
+# 机器上有 bun
+bunx @iyowei/sweep-node-modules
+
+# 机器上有 node (npx 随 npm 一同安装, 本身就需要 node)
+npx @iyowei/sweep-node-modules
+```
+
+- **需要**: bun 或 node, 与所选命令对应
+- 特点: 零安装; 每次运行会解析一次包
+- 注意: `bunx` 与 `npx` 各自依附一个运行时, 不是可互换的通用选项: 只有 bun 的机器没有 `npx`, 只有 node 的机器没有 `bunx`
+
+### ② 包管理器全局安装 (常用推荐)
 
 ```shell
 npm install -g @iyowei/sweep-node-modules
+bun install -g @iyowei/sweep-node-modules
 ```
 
-**从源码**:
+- **需要**: **node** (两条命令都要)。npm 本身跑在 node 上; `bun install -g` 生成的是指向入口文件的符号链接, 执行时由系统内核读该文件的 shebang (node) 来决定解释器, 应用层插不上手
+- 特点: 装一次后直接敲 `sweep-nm`; 有 bun 时业务逻辑仍优先走 bun
+- **机器上只有 bun、且不想装 node**: 请走 ① 或 ③
+
+### ③ 从源码 (开发, 或无 node 环境)
 
 ```shell
 chmod +x bin/sweep-nm
@@ -32,7 +49,8 @@ chmod +x bin/sweep-nm
 ln -sf "$HOME/self/development/sweep-node-modules/bin/sweep-nm" ~/.local/bin/sweep-nm
 ```
 
-> 业务逻辑两种方式都跑 Bun / Node 双运行时, 但**入口要求不同**: npm 路径的入口由 node 启动 (需有 node), 源码路径的 shell 启动器装任一即可 (详见上「要求」节)。从源码安装的 Windows 用户入口为 `bin\sweep-nm.cmd`。
+- **需要**: bun 或 node 任一 (启动器是 shell 脚本, 由系统 shell 执行, 不依赖 node)
+- 特点: 入口最直接; Windows 用户入口为 `bin\sweep-nm.cmd`
 
 ## 使用
 
