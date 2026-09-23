@@ -22,5 +22,8 @@
 
     "types": ["bun"]
   },
-  "include": ["src", "bench", "scripts"]
+  "include": ["src", "bench", "scripts"],
+  // 变异生成器的产物 (gen-*/src/*.ts) 由 make-mutants.ts 生成, 是派生件而非源码;
+  // 不排除则重跑生成器后 tsc --noEmit 会把它们收进编译范围并变红 (实测命中)
+  "exclude": ["scripts/transcription/mutants"]
 }
