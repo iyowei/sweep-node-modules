@@ -11,6 +11,7 @@
 - 运行时二选一: **bun 或 node** 皆可 (双运行时, 装任一即可用)。
 - 取最新一代运行时 API: bun 任意近期版本; node 需原生支持 TypeScript 直跑的版本 (版本快照与实测记录见 [ADR 0006](docs/adrs/0006-dual-runtime-bun-first.md))。
 - 零第三方运行时依赖 (只用运行时内置能力)。
+- 平台: Windows / macOS / Linux 三平台均可运行 (见 [ADR 0007](docs/adrs/0007-platform-portability.md))。
 
 ## 安装
 
@@ -20,6 +21,8 @@ chmod +x bin/sweep-nm
 # 软链进 ~/.local/bin, 启动器会挑选运行时 (Bun 优先, Node 回退)
 ln -sf "$HOME/self/development/sweep-node-modules/bin/sweep-nm" ~/.local/bin/sweep-nm
 ```
+
+> Windows 用户: 入口为 `bin\sweep-nm.cmd` (与 sh 启动器同逻辑)。
 
 ## 使用
 
@@ -39,7 +42,7 @@ sweep-nm init
 
 ## 配置
 
-配置文件: `~/.config/sweep-node-modules/config.json`
+配置文件位置 (平台自适应): Windows 为 `%APPDATA%\sweep-node-modules\config.json`, 其余为 `~/.config/sweep-node-modules/config.json`; 可用 `--config` 或环境变量 `SWEEP_NM_CONFIG` 覆盖。
 
 ```json
 {

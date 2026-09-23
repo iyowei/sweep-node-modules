@@ -5,9 +5,22 @@
 > **决策者**: 沈委
 > **父文档**: [设计总纲](sweep-node-modules-design.md)
 
+## 修订记录
+
+| 日期       | 修订                                       |
+| ---------- | ------------------------------------------ |
+| 2026-09-23 | 配置定位改为平台自适应 + 三级覆盖 (不写死) |
+
 ## 配置规格
 
-配置文件: `~/.config/sweep-node-modules/config.json`
+配置文件位置 (平台自适应, 不写死):
+
+| 平台                 | 默认路径                                   |
+| -------------------- | ------------------------------------------ |
+| Windows              | `%APPDATA%\sweep-node-modules\config.json` |
+| 其余 (macOS / Linux) | `~/.config/sweep-node-modules/config.json` |
+
+优先级: `--config <path>` > 环境变量 `SWEEP_NM_CONFIG` > 平台默认 (覆盖通道亦服务测试与受控环境); 见 [ADR 0007](../adrs/0007-platform-portability.md)。
 
 ```json
 {

@@ -35,7 +35,7 @@
 3. **语法约束 (为 Node 类型剥离而设)**: 仅使用可擦除 TS 语法 (禁 `enum` / `namespace` / 参数属性等需 emit 的特性); tsconfig 开启 `erasableSyntaxOnly`, 把约束物理钉死在类型检查上。
 4. **入口形态**: `src/cli.ts` 不再自带 shebang、不再直接软链; 新增 `bin/sweep-nm` 启动器 (sh), 按「Bun 优先, Node 回退」挑选运行时后 `exec` 真实入口; `~/.local/bin/sweep-nm` 软链指向启动器 (修订 [ADR 0003](0003-zero-runtime-deps.md) 的安装形态与运行时要求; 其零依赖与零构建策略不变)。
 5. **版本要求**: 双侧都要「最新一代」: Bun 任意近期版本; Node 需原生支持 TypeScript 直跑的版本。本机实测: bun 1.4.2 与 node 26.7.0 双跑同一入口通过。
-6. **性能取向**: 热路径 (目录遍历) 按 [扫描与体积](../designs/scan-and-size.md)「性能要点」的手册执行 (withFileTypes 免逐个 lstat、命中剪枝、跳过 `.git`、符号链接不跟进、批量单次 du)。
+6. **性能取向**: 热路径 (目录遍历) 按 [扫描与体积](../designs/scan-and-size.md)「性能要点」的手册执行 (withFileTypes 免逐个 lstat、命中剪枝、跳过 `.git`、符号链接不跟进; 体积统计候选与裁定见该分册)。
 
 选择原因: 任一运行时均可用; Bun 主路径拿到启动与 spawn 性能; 单源码无分叉; 约束落在可物理校验的闸门 (tsconfig 选项) 之上。
 
