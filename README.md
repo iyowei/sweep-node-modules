@@ -13,6 +13,14 @@
 
 ## 安装
 
+**npm** (推荐):
+
+```shell
+npm install -g @iyowei/sweep-node-modules
+```
+
+**从源码**:
+
 ```shell
 chmod +x bin/sweep-nm
 
@@ -20,7 +28,7 @@ chmod +x bin/sweep-nm
 ln -sf "$HOME/self/development/sweep-node-modules/bin/sweep-nm" ~/.local/bin/sweep-nm
 ```
 
-> Windows 用户: 入口为 `bin\sweep-nm.cmd` (与 sh 启动器同逻辑)。
+> 两种方式都支持 Bun / Node 双运行时 (装任一即可用); 从源码安装的 Windows 用户入口为 `bin\sweep-nm.cmd`。
 
 ## 使用
 

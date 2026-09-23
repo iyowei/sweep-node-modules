@@ -4,3 +4,4 @@ node_modules/
 *.modified
 bench/results/
 scripts/transcription/mutants/gen-*/
+dist/

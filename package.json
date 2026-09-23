@@ -1,14 +1,38 @@
 {
-  "name": "sweep-node-modules",
+  "name": "@iyowei/sweep-node-modules",
   "version": "0.1.0",
-  "private": true,
+  "description": "工作区级 node_modules 清理工具: 一次扫描多个根目录, 跨项目列出体积, 确认后批量删除。",
+  "keywords": [
+    "cli",
+    "bun",
+    "nodejs",
+    "node-modules",
+    "disk-usage",
+    "cleanup"
+  ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iyowei/sweep-node-modules.git"
+  },
   "type": "module",
   "bin": {
-    "sweep-nm": "bin/sweep-nm"
+    "sweep-nm": "bin/sweep-nm.mjs"
+  },
+  "files": [
+    "bin/sweep-nm.mjs",
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "prepare": "[ -z \"$CI\" ] && lefthook install || true",
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
