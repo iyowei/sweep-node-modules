@@ -14,6 +14,7 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
     "isolatedModules": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

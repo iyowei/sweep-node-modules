@@ -6,15 +6,17 @@
 
 ## 要求
 
-- [bun](https://bun.sh) 运行时 (零第三方依赖, 只用内置能力)。
+- 运行时二选一: **bun 或 node** 皆可 (双运行时, 装任一即可用)。
+- 取最新一代运行时 API: bun 任意近期版本; node 需原生支持 TypeScript 直跑的版本。本机实测 bun 1.4.2 / node 26.7.0 通过。
+- 零第三方运行时依赖 (只用运行时内置能力)。
 
 ## 安装
 
 ```shell
-chmod +x src/cli.ts
+chmod +x bin/sweep-nm
 
-# 软链进 ~/.local/bin, 命令名取短变体
-ln -sf "$HOME/self/development/sweep-node-modules/src/cli.ts" ~/.local/bin/sweep-nm
+# 软链进 ~/.local/bin, 启动器会挑选运行时 (Bun 优先, Node 回退)
+ln -sf "$HOME/self/development/sweep-node-modules/bin/sweep-nm" ~/.local/bin/sweep-nm
 ```
 
 ## 使用
@@ -61,6 +63,8 @@ bun run lint       # oxlint
 bun run format     # prettier --write
 bun test           # bun test
 ```
+
+运行时双跑验证: `bun src/cli.ts` 与 `node src/cli.ts` 均可直接运行。
 
 提交与推送由 lefthook 把关: pre-commit 增量 (prettier 重暂存 + oxlint + 全量类型检查), pre-push 全量只读 (typecheck / test / oxlint / prettier `--check`)。
 

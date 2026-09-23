@@ -55,3 +55,4 @@
 
 - 软链路径约定同源: `~/.local/bin` 为用户级 CLI 软链统一点。
 - 定位见 [ADR 0001](0001-workspace-level-cleaner.md)。
+- 双运行时支持与安装形态变更 (软链指向 `bin/sweep-nm` 启动器) 见 [ADR 0006](0006-dual-runtime-bun-first.md); 本 ADR 的零依赖与免构建策略不变。

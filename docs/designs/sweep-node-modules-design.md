@@ -13,6 +13,7 @@
 | 2026-09-23 | 初稿: 立项设计, 含命令面、配置规格、扫描与安全闸、代码结构、测试策略、明确不做清单                                        |
 | 2026-09-23 | 补记: 配置初始化模型 (`sweep-nm init` 子命令 + 首次自动向导), 见 [ADR 0004](../adrs/0004-config-initialization-wizard.md) |
 | 2026-09-23 | 补记: 工程闸门 (oxlint / prettier / lefthook), 见 [ADR 0005](../adrs/0005-engineering-gates-and-hooks.md)                 |
+| 2026-09-23 | 补记: 双运行时 (Bun 优先 / Node 回退) 与性能要点, 见 [ADR 0006](../adrs/0006-dual-runtime-bun-first.md)                   |
 
 ## 一、定位与成功标准
 
@@ -74,7 +75,8 @@ sweep-nm --help             帮助
 1. 自每个根递归遍历; 目录名恰为 `node_modules` 时记录其父目录为「项目」, 并**不再下钻** (嵌套天然解决);
 2. 符号链接目录不跟进 (防环、防误出根);
 3. 排除判定在进入目录时进行: 路径段命中 `exclude` 即整棵子树跳过;
-4. 多根结果合并, 按 realpath 去重。
+4. 多根结果合并, 按 realpath 去重;
+5. 跳过 `.git` 目录 (不可能含项目依赖, 直接减掉整棵子树的遍历开销)。
 
 体积:
 
@@ -105,7 +107,8 @@ sweep-nm --help             帮助
 
 ```text
 src/
-├── cli.ts      # 入口: shebang、参数解析、流程编排、帮助
+├── cli.ts      # 入口: 参数解析、流程编排、帮助
+├── runtime.ts  # 运行时适配: Bun 优先 / Node 回退 (spawn 与文件读写)
 ├── config.ts   # 配置读取与合并 (配置文件 + --exclude)
 ├── init.ts     # 初始化向导: 交互 IO (readline) 与配置生成纯逻辑分离
 ├── scan.ts     # 纯函数: 递归扫描 (剪枝/排除/去重)
@@ -113,6 +116,8 @@ src/
 ├── guard.ts    # 安全闸: 删除目标合法性校验
 └── *.test.ts   # 与模块同名并置的单测
 ```
+
+入口形态: `bin/sweep-nm` 启动器 (sh) 挑选运行时 (Bun 优先, Node 回退) 后 `exec` `src/cli.ts`; 双运行时策略与约束见 [ADR 0006](../adrs/0006-dual-runtime-bun-first.md)。
 
 纯逻辑 (scan / guard / init 的配置生成) 与 IO (fs / spawn / readline) 分离, 纯逻辑直接单测; 文件保持小块, 单文件职责单一。
 
@@ -166,6 +171,18 @@ docs/
 
 oxlint (Lint) + prettier (格式) + lefthook (提交钩子), 分层为 pre-commit 增量与 pre-push 全量只读; `.editorconfig` 与依赖精确锁定与参考项目 fiu-kits / buffett 对齐。决策与取舍见 [ADR 0005](../adrs/0005-engineering-gates-and-hooks.md); 操作级细节以仓库根 `lefthook.yml`、`.oxlintrc.json`、`.prettierrc` 为准, 本节不复述。
 
+## 十三、运行时与性能
+
+**双运行时**: 同一份源码在 Bun 与 Node 上都可直跑 (Bun 优先, Node 回退; 装任一即可用), 入口由 `bin/sweep-nm` 启动器挑选运行时。策略与约束见 [ADR 0006](../adrs/0006-dual-runtime-bun-first.md): 仅可擦除 TS 语法 (tsconfig `erasableSyntaxOnly` 钉死), 差异能力 (spawn / 文件读写) 收敛在 `src/runtime.ts` 薄适配层, 其余走 `node:` 兼容 API。
+
+**性能要点** (热路径 = 目录遍历, 性能不能差):
+
+- `readdir withFileTypes` 取条目类型, 免逐个 `lstat`;
+- 命中 `node_modules` 即剪枝, 不下钻;
+- 跳过 `.git` 目录;
+- 符号链接目录不跟进;
+- 体积统计批量单次 `du`, 不逐处 spawn。
+
 ## 关联引用
 
 - [ADR 0001: 工作区级清理工具定位](../adrs/0001-workspace-level-cleaner.md)
@@ -173,3 +190,4 @@ oxlint (Lint) + prettier (格式) + lefthook (提交钩子), 分层为 pre-commi
 - [ADR 0003: bun + TypeScript 零运行时依赖](../adrs/0003-bun-zero-runtime-deps.md)
 - [ADR 0004: 配置初始化向导](../adrs/0004-config-initialization-wizard.md)
 - [ADR 0005: 工程闸门与提交钩子](../adrs/0005-engineering-gates-and-hooks.md)
+- [ADR 0006: 双运行时支持与 Bun 优先的 API 策略](../adrs/0006-dual-runtime-bun-first.md)

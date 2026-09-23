@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "bin": {
-    "sweep-nm": "src/cli.ts"
+    "sweep-nm": "bin/sweep-nm"
   },
   "scripts": {
     "prepare": "[ -z \"$CI\" ] && lefthook install || true",

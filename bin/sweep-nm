@@ -1,0 +1,23 @@
+#!/bin/sh
+# sweep-nm 启动器: 挑选运行时 (Bun 优先, 其次 Node) 后 exec 真实入口。
+# 经 ~/.local/bin/sweep-nm 软链调用; readlink 解出仓库内路径 (BSD / GNU 皆可)。
+
+# readlink 为空 = 未经软链直跑, 此时 $0 即自身路径
+target=$(readlink "$0" 2>/dev/null)
+case "$target" in
+  "") target=$0 ;;
+  /*) ;;
+  *) target="$(dirname "$0")/$target" ;;
+esac
+root=$(cd "$(dirname "$target")/.." && pwd)
+
+if command -v bun >/dev/null 2>&1; then
+  exec bun "$root/src/cli.ts" "$@"
+fi
+
+if command -v node >/dev/null 2>&1; then
+  exec node "$root/src/cli.ts" "$@"
+fi
+
+echo "sweep-nm: 未找到 bun 或 node, 请至少安装其一" >&2
+exit 1
