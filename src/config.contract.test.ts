@@ -360,14 +360,30 @@ describe('config 契约: 合并 (mergeNames)', () => {
     expect(mergeNames(['node_modules'], ['node_modules'])).toEqual([]);
   });
 
+  test('静默剔除 .git: 配置侧与命令行侧均不保留 (扫描恒跳过, 留在名单里只会换来假告警)', () => {
+    expect(mergeNames(['.git', 'dist'], ['docs-site'])).toEqual([
+      'dist',
+      'docs-site',
+    ]);
+    expect(mergeNames(['dist'], ['.git'])).toEqual(['dist']);
+    expect(mergeNames(['.git'], ['.git'])).toEqual([]);
+  });
+
   test('剔除不影响其余名字: 去重与首见顺序照旧', () => {
     expect(
       mergeNames(['node_modules', 'a', 'b'], ['b', 'node_modules', 'c']),
     ).toEqual(['a', 'b', 'c']);
   });
 
+  test('两个必剔名可同时出现: 一并剔除, 其余名字顺序不变', () => {
+    expect(
+      mergeNames(['node_modules', '.git', 'my-kits'], ['.git', 'dist']),
+    ).toEqual(['my-kits', 'dist']);
+  });
+
   test('剔除按精确匹配: 大小写不同者原样保留', () => {
     expect(mergeNames(['Node_Modules'], [])).toEqual(['Node_Modules']);
+    expect(mergeNames(['.GIT'], [])).toEqual(['.GIT']);
   });
 
   test('剔空后为空数组: include 侧等于不过滤, 而非只扫 node_modules', () => {

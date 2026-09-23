@@ -221,23 +221,29 @@ export async function loadResolvedConfig(
 
 /**
  * 合并名单 (排除与包含共用): 配置名单在前、命令行追加在后, 跨来源去重 (保留首见顺序);
- * 同时静默剔除 node_modules 自身, 它是本工具唯一的目标, 写进两份名单里都不成立:
- * 列入排除名单等于排掉唯一操作目标 (工具彻底失效); 列入包含名单则是永久零命中
- * (扫描读到 node_modules 即剪枝, 该名字只可能落在候选路径的末段, 而名单判定只看中间级别,
- * 见 scan-native.ts 中 Candidate.segments 的「末段恒为 node_modules」)。
+ * 同时静默剔除两个写进名单也永不生效的名字, 两者理由不同:
+ * - node_modules: 本工具唯一的目标, 写进两份名单里都不成立。列入排除名单等于排掉唯一操作目标
+ *   (工具彻底失效); 列入包含名单则是永久零命中 (扫描读到 node_modules 即剪枝, 该名字只可能落在
+ *   候选路径的末段, 而名单判定只看中间级别, 见 scan-native.ts 中 Candidate.segments 的
+ *   「末段恒为 node_modules」)。
+ * - .git: 扫描恒定跳过的目录 (三名候选均不产出其下的命中: prune / parallel 在进入目录时短路,
+ *   native 在后过滤里剔除含 .git 路径段的候选), 从不参与名单判定。留在名单里只会换来一条结构性
+ *   假告警: 该目录客观存在, 却因剪枝早于逐名计数而被报成「未匹配到任何目录」, 恰是这条反馈通道
+ *   最该避免的误导。
  *
  * 剔除只做静默丢弃, 不报错、不阻断、不告警; 匹配口径与其余名单判定一致, 按名精确匹配且区分大小写。
  * 内含 include 侧的一个易误解点: 剔空后等于「不过滤」(空数组即不过滤, 见 Config.include),
  * 而不是「只扫 node_modules」。
  *
  * 落点选在合并收口处而非逐个扫描候选改判定: 所有消费方都经此处取名单, 三名候选
- * (prune / parallel / native) 天然不含该名字, 一处收口胜过三处判定修改。
+ * (prune / parallel / native) 天然不含这两个名字, 一处收口胜过三处判定修改。
  */
 export function mergeNames(
   configNames: string[],
   cliNames: string[],
 ): string[] {
   return [...new Set([...configNames, ...cliNames])].filter(
-    (name) => name !== 'node_modules',
+    // 两个名字写进任何一份名单都永不生效, 一律静默剔除 (各自理由见上方 JSDoc)
+    (name) => name !== 'node_modules' && name !== '.git',
   );
 }

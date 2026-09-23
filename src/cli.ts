@@ -231,8 +231,9 @@ async function resolveConfig(
 
   const result = await runWizard(resolved.path);
   if (result.state === 'written' && result.config !== undefined) {
-    // 向导只问扫描根与排除名单 (设计: config-and-initialization.md), 白名单按缺省语义补空数组
-    return { config: { ...result.config, include: [] }, source: 'wizard' };
+    // 直接用向导返回的配置: 它与 init 写盘的对象同一份, 白名单已由 init 显式落空数组
+    // (设计: config-and-initialization.md), 此处不重述
+    return { config: result.config, source: 'wizard' };
   }
 
   print('配置未写入, 本次未执行清理');
@@ -323,6 +324,10 @@ type NameMatches = NonNullable<ScanResult['excludeMatches']>;
  * (见 render.ts「notes」: 裸文本压在顶栏上方会打断顶栏与清单的紧邻关系)。
  * 两者的后果方向相反, 文案各说各的: 排除名写错只是少排除 (多排除 = 少删, 错在安全侧),
  * 包含名写错则整个筛选为空, 故白名单全零命中时另补一句后果说明。
+ * 命中回执的用词两侧各按事实取: 排除侧说「排除生效」属实 (它确实生效); 包含侧只说「包含命中」,
+ * 不说「生效」: 同一名字同时出现在两份名单时 exclude 优先把该子树整棵截走, 计数照旧成立
+ * (见 scan-parallel.ts 的计数点注释: 截走不等于没匹配上), 但该名字并未真的纳入任何候选,
+ * 此时说「生效」即是不实承诺。
  */
 function collectNameNotes(
   excludeMatches: NameMatches | undefined,
@@ -343,7 +348,7 @@ function collectNameNotes(
   for (const item of includes) {
     if (item.hits === 0)
       warn(`包含名未匹配到任何目录: ${item.name} (按目录名精确匹配)`, color);
-    else if (tty) notes.push(`包含生效: ${item.name} (${item.hits} 处)`);
+    else if (tty) notes.push(`包含命中: ${item.name} (${item.hits} 处)`);
   }
   // 逐名告警已在上方给出, 此处点明整体后果: 白名单一条都没命中, 本次必然什么都扫不出
   if (includes.length > 0 && includes.every((item) => item.hits === 0))
@@ -402,13 +407,16 @@ function toEntries(hits: ScanHit[], sizeResult: SizeResult): RenderEntry[] {
  *   options = { command: 'sweep', yes: true, exclude: [], include: [], help: false }
  *   磁盘树 = /w/alpha/node_modules (4.6 GB, 可读), /w/locked/node_modules (权限不足, 测不到体积)
  *
- * 步骤 1：扫描 + 实测体积 (测不到的以占位行上清单, 不再静默移出)
+ * 步骤 1：扫描 → 收集名单回执 (collectNameNotes: 未命中名就地告警走 stderr, 命中回执交 notes 随清单输出)
+ *   hits = [alpha, locked], nameNotes = []  // 名单为空即无回执
+ *
+ * 步骤 2：实测体积 (测不到的以占位行上清单, 不再静默移出)
  *   entries = [alpha 4.6 GB, locked '?' + note 体积统计失败]
  *
- * 步骤 2：删除批次只含测到体积的条目 → 安全闸校验
+ * 步骤 3：删除批次只含测到体积的条目 → 安全闸校验
  *   accepted = ['/w/alpha/node_modules'], rejected = []
  *
- * 步骤 3：删除并回挂结果 (未入批的 locked 落 ok: false)
+ * 步骤 4：删除并回挂结果 (未入批的 locked 落 ok: false)
  *   report = [alpha ✓, locked ✗], releasedBytes = 4939212390
  *
  * Output（数据契约）

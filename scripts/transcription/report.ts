@@ -6,7 +6,11 @@
  */
 
 export interface FailureItem {
-  /** 断言类别: timeout | spawn | exitCode | stdoutExact | stdoutContains | stderrContains | fs */
+  /**
+   * 断言类别 (枚举, 由 compare.ts 产出; 新增断言原语时须同步本行):
+   * timeout | spawn | exitCode | stdoutExact | stdoutContains | stderrContains
+   * | stdoutMustNotContain | stderrMustNotContain | fs
+   */
   kind: string;
   /** 单行摘要 (面向人读) */
   message: string;

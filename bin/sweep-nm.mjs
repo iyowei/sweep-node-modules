@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 /**
  * npm 安装场景的启动器: 挑选运行时 (Bun 优先, 其次 Node) 后启动真实入口。
- * 与 bin/sweep-nm (sh) / bin/sweep-nm.cmd (cmd) 同逻辑, 三者的差异只在宿主:
+ * 与 bin/sweep-nm (sh) / bin/sweep-nm.cmd (cmd) 职责同逻辑 (挑选运行时: Bun 优先, Node 回退),
+ * 差异在宿主与本文件多加的入口选择 (优先跑编译产物 dist/cli.js, 无产物则回退源码 src/cli.ts;
+ * 包内只有产物, 开发态通常无产物):
+ * 本文件同时承担 Unix 与 Windows 的 npm shim 目标 (shebang 必须是 node, 否则
  * 本文件同时承担 Unix 与 Windows 的 npm shim 目标 (shebang 必须是 node, 否则
  * npm 的 cmd-shim 会按 shebang 解释器生成 Windows 上不存在的调用)。
  * 退出码原样透传; 两个运行时都缺席时给出可操作提示并非零退出。

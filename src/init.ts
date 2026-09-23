@@ -120,9 +120,11 @@ export function parseList(answer: string | null, fallback: string[]): string[] {
  *
  * 执行步骤：
  * 1. 配置已存在则先确认覆盖 (默认否), 拒绝即返回 declined-overwrite;
- * 2. 开场提示后问扫描根: 逐根校验存在性, 不存在的提示「根不存在」后重问该问;
+ * 2. 开场提示后问扫描根 (默认值为家目录而非 cwd: 工作区级清理与唤起目录无关): 逐根校验存在性,
+ *    不存在的提示「根不存在」后重问该问;
  * 3. 问排除名单 (可留空), 回显解析结果并确认 (默认写入);
- * 4. 中途取消与回显拒绝统一返回 cancelled 且不落盘, 确认后落盘返回 written。
+ * 4. 中途取消与回显拒绝统一返回 cancelled 且不落盘;
+ * 5. 落盘后回显 (先报写入路径, 家目录缩写; 再原样打印落盘全文, 与文件逐字一致), 返回 written。
  */
 export async function runInit(deps: InitDeps): Promise<InitResult> {
   const { configPath, fileExists, writeFile, io } = deps;
