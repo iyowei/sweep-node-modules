@@ -19,11 +19,12 @@
  * 类型判定, 因 realpath 只解析不校验类型 —— 根指向普通文件时会成功返回, 不拦则会由 readdir 的
  * ENOTDIR 落进「目录不可读」, 诱导用户去查权限。
  *
- * 名单反馈通道 (候选 A 无此字段): 逐名统计「因该名跳过的子树数」(exclude) 与「因该名纳入的子树数」
+ * 名单反馈通道 (候选 A 无此字段): 逐名统计「因该名跳过的子树数」(exclude) 与「命中该名的子树数」
  * (include), 未命中的名字以 0 保留在列, 顺序同输入名单 — 供破坏性动作在名字打错 / 大小写不符时
  * 仍能提示「这条名单没生效」; 白名单零命中的后果更重 (筛选结果为空), 同款通道更不可缺。
  * 计数点在各名单的判定处, 故 node_modules 命中优先、根自身同名均不计入 (与既有裁决一致);
- * include 的计数点即「该子树由未纳入翻为已纳入」的那一级, 更深层的同名不再重复计。
+ * include 的计数点即「该子树由未纳入翻为已纳入」的那一级 (更深层的同名不再重复计), 且该判定
+ * 独立于 exclude 优先: 名字命中白名单即计数, 随后被 exclude 截走仍计入 (截走不等于没匹配上)。
  *
  * 已知差异 (两套尺子均不约束): warnings 次序为并发完成序, 契约不约束, 亦不等价于 A 的遍历次序。
  * 失败形态: readdir / realpath 的失败照 A 降级为告警; 其余非预期异常取首个、池排空后原样抛出,
@@ -95,7 +96,7 @@ interface WalkContext {
   excludeCounts: Map<string, number>;
   /** 包含名单 (白名单): 非空时, 路径一级都未命中的候选不记录 */
   include: Set<string>;
-  /** 包含名的纳入计数 (名字 → 次数), 未命中名同样在列 */
+  /** 包含名的命中计数 (名字 → 次数), 未命中名同样在列; 命中后被 exclude 截走的同样计入 */
   includeCounts: Map<string, number>;
   /** 去重键 = target 的 realpath; 值为对外输出 (调用方按 target 升序排序后返回) */
   hits: Map<string, ScanHit>;
@@ -180,16 +181,20 @@ async function walkRoot(root: string, ctx: WalkContext): Promise<void> {
           continue;
         }
         if (name === GIT_DIR) continue;
+
+        // 白名单判定先于 exclude (与设计「先按白名单筛出候选, 再排掉命中排除的」同序):
+        // 名字确已命中白名单即计数, 随后是否被 exclude 截走不改变命中这一事实, 免得
+        // 「被排除优先截走」冒充「名字没匹配上」而误报未命中。
+        // 计数点仍是「该子树由未纳入翻为已纳入」的那一级 (更深层的同名不再重复计)
+        const childIncluded = included || include.has(name);
+        if (!included && include.has(name)) {
+          includeCounts.set(name, (includeCounts.get(name) ?? 0) + 1);
+        }
+
         if (exclude.has(name)) {
           // 每次因该名跳过一棵子树计 1, 与「任意一级命中即整棵跳过」同一判定点
           excludeCounts.set(name, (excludeCounts.get(name) ?? 0) + 1);
           continue;
-        }
-
-        // 白名单的计数点 = 该子树由未纳入翻为已纳入的那一级 (更深层的同名不再重复计)
-        const childIncluded = included || include.has(name);
-        if (!included && include.has(name)) {
-          includeCounts.set(name, (includeCounts.get(name) ?? 0) + 1);
         }
 
         // 只入栈, 由 pump 统一分配并发额度; 就地展开会退化为无界递归并发

@@ -149,6 +149,33 @@ for (const scanner of candidates) {
       ]);
     });
 
+    test('包含与排除同时命中同一名字: 被 exclude 截走不等于名字没匹配上', async () => {
+      const { root } = await make({
+        projects: [{ dir: 'alpha' }, { dir: 'beta' }, { dir: 'gamma' }],
+      });
+
+      const result = await scanner.scan({
+        roots: [root],
+        exclude: ['beta'],
+        include: ['alpha', 'beta'],
+      });
+
+      // exclude 优先: beta 目录客观存在且命中白名单, 整棵子树仍被截走, 结果只剩 alpha
+      expect(result.hits.map((hit) => hit.project)).toEqual([
+        join(root, 'alpha'),
+      ]);
+
+      // 名单反馈通道仅胜出门面 (parallel) 提供 (候选 A / B 无此字段, 见 types.ts):
+      // 计数为 0 即被调用方译为「包含名未匹配到任何目录」, 故 beta 必须计入 —— 它只是被
+      // exclude 优先截走, 与「名字压根没匹配上」是两回事, 不得冒充后者误报。
+      if (result.includeMatches !== undefined) {
+        expect(result.includeMatches).toEqual([
+          { name: 'alpha', hits: 1 },
+          { name: 'beta', hits: 1 },
+        ]);
+      }
+    });
+
     test('符号链接: 目录不跟进, 不产生重复命中', async () => {
       const { root } = await make({
         projects: [{ dir: 'real' }],

@@ -272,6 +272,32 @@ function definePreviewCases(runner: string, available: boolean): void {
       },
     );
 
+    test.skipIf(!available)(
+      '--include 与 --exclude 同时命中同一名: 不报未匹配, 结果按 exclude 优先',
+      async () => {
+        const workspace = await make({
+          projects: [{ dir: 'alpha' }, { dir: 'beta' }],
+        });
+        const config = writeConfig(
+          workspace,
+          [workspace.root],
+          ['beta'],
+          ['alpha', 'beta'],
+        );
+
+        const result = runCli(runner, [], { env: { SWEEP_NM_CONFIG: config } });
+
+        expect(result.status).toBe(0);
+        // beta 目录客观存在且命中白名单, 只是被 exclude 优先截走: 不得报成「未匹配」
+        expect(result.stderr).not.toContain('包含名未匹配');
+        expect(result.stdout).not.toContain('包含名未匹配');
+        // 应给出的信号是白名单命中 (alpha 生效), 而非白名单写错的后果说明
+        expect(result.stderr).not.toContain('包含名单无一条命中');
+        expect(result.stdout).toContain('alpha');
+        expect(result.stdout).not.toContain('beta');
+      },
+    );
+
     test.skipIf(!available)('--yes 执行: 目标删除且邻居完好', async () => {
       const workspace = await make({ projects: [{ dir: 'alpha' }] });
       const config = writeConfig(workspace, [workspace.root]);
