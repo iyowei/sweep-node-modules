@@ -31,7 +31,7 @@
   },
   "scripts": {
     "prepare": "[ -z \"$CI\" ] && lefthook install || true",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "bun build src/cli.ts --target=node --outfile=dist/cli.js",
     "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",

@@ -23,7 +23,7 @@ const pickRuntime = () => {
 };
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-// npm 包内是编译产物 (node 拒绝对 node_modules 内的 TS 做类型剥离, 见 tsconfig.build.json);
+// npm 包内是编译产物 (node 拒绝对 node_modules 内的 TS 做类型剥离, 见 package.json 的 build 脚本);
 // 仓库开发态无 dist, 回退直跑源码 (bun / node 皆可)
 const built = join(root, 'dist', 'cli.js');
 const entry = existsSync(built) ? built : join(root, 'src', 'cli.ts');
