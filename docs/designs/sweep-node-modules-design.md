@@ -51,7 +51,7 @@ bin/
 
 双运行时策略见 [ADR 0006](../adrs/0006-dual-runtime-bun-first.md); `src/runtime.ts` 导出面约定:
 
-- `isBun`: 运行时探测 (`typeof Bun !== 'undefined'`);
+- `isBun`: 运行时探测 (功能检测 `typeof Bun !== 'undefined'`: 有 Bun 走 Bun 实现, 无则回退 Node);
 - `spawnCapture(cmd, args)`: 子进程执行并捕获 stdout (Bun 走 `Bun.spawn`, Node 走 `node:child_process`);
 - `readTextFile(path)` / `writeTextFile(path, text)`: 文本读写 (Bun 走 `Bun.file` / `Bun.write`, Node 走 `node:fs/promises`);
 - 其余能力 (目录遍历、删除等) 一律直接走 `node:` 兼容 API, 不设分支。
