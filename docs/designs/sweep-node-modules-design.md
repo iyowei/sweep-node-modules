@@ -81,7 +81,7 @@ scripts/transcription/  # 转写契约套件的验收器与变异生成器 (见 
 
 测试文件按语义命名 (如 `scan.contract.test.ts`, `guard.contract.test.ts`); 向导的 TTY 交互不做端到端自动化 (管道冒烟见 `init.smoke.test.ts`), 由「答案到配置对象再到落盘决策」的纯逻辑单测覆盖。
 
-实现落地后实测覆盖远超本表: 243 条测试 (含压测长跑、伪终端冒烟、双载体 e2e) 与 40 条转写金样本语料; 明细见各 `*.test.ts` 与 [转写契约套件](../protocol/README.md) 的覆盖表。
+实现落地后实测覆盖远超本表: 265 条测试 (含压测长跑、伪终端冒烟、双载体 e2e) 与 44 条转写金样本语料; 明细见各 `*.test.ts` 与 [转写契约套件](../protocol/README.md) 的覆盖表。
 
 ## 四、明确不做 (YAGNI)
 

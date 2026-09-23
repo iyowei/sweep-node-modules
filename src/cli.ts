@@ -18,7 +18,7 @@ import { type RemovalResult, removeTargets } from './delete.ts';
 import { validateTargets } from './guard.ts';
 import { type InitResult, createReadlineIO, runInit } from './init.ts';
 import { BAR_BLOCK, type RenderEntry, paint, render } from './render.ts';
-import { writeTextFile } from './runtime.ts';
+import { runtimeLabel, writeTextFile } from './runtime.ts';
 import { createScanner } from './scan.ts';
 import { createSizer } from './size.ts';
 import type { ScanHit, ScanResult, SizeResult } from './types.ts';
@@ -318,31 +318,38 @@ type NameMatches = NonNullable<ScanResult['excludeMatches']>;
 
 /**
  * 名单反馈 (名单写错不得静默, 见 types.ts「excludeMatches」与「includeMatches」):
- * 未命中的名字一律告警 (名字打错不得静默); 命中的只在真终端补一行确认, 非 TTY 下不增噪音。
- * 排除名写错只是少排除 (多排除 = 少删, 错在安全侧), 包含名写错则整个筛选为空,
- * 故白名单全零命中时另补一句后果说明。
+ * 未命中的名字一律就地告警 (写错必须立刻可见, 走 stderr 且压在顶栏之前, 位置本身即是强调);
+ * 命中的回执照旧只报给真终端, 但不就地打印, 而是交回调用方随清单输出为顶栏下方的中性提示行
+ * (见 render.ts「notes」: 裸文本压在顶栏上方会打断顶栏与清单的紧邻关系)。
+ * 两者的后果方向相反, 文案各说各的: 排除名写错只是少排除 (多排除 = 少删, 错在安全侧),
+ * 包含名写错则整个筛选为空, 故白名单全零命中时另补一句后果说明。
  */
-function reportNameMatches(
+function collectNameNotes(
   excludeMatches: NameMatches | undefined,
   includeMatches: NameMatches | undefined,
   color: boolean,
-): void {
-  const tty = process.stderr.isTTY === true;
+): string[] {
+  const notes: string[] = [];
+  // 与 notes 的去向 (stdout) 同一判据: 提示进清单流, 便按 stdout 是否为终端决定要不要加
+  const tty = process.stdout.isTTY === true;
+
   for (const item of excludeMatches ?? []) {
     if (item.hits === 0)
       warn(`排除名未匹配到任何目录: ${item.name} (按目录名精确匹配)`, color);
-    else if (tty) notice(`排除生效: ${item.name} (${item.hits} 处)`);
+    else if (tty) notes.push(`排除生效: ${item.name} (${item.hits} 处)`);
   }
 
   const includes = includeMatches ?? [];
   for (const item of includes) {
     if (item.hits === 0)
       warn(`包含名未匹配到任何目录: ${item.name} (按目录名精确匹配)`, color);
-    else if (tty) notice(`包含生效: ${item.name} (${item.hits} 处)`);
+    else if (tty) notes.push(`包含生效: ${item.name} (${item.hits} 处)`);
   }
   // 逐名告警已在上方给出, 此处点明整体后果: 白名单一条都没命中, 本次必然什么都扫不出
   if (includes.length > 0 && includes.every((item) => item.hits === 0))
     warn('包含名单无一条命中, 本次扫描必为空结果 (请核对名字与大小写)', color);
+
+  return notes;
 }
 
 /**
@@ -419,11 +426,14 @@ async function sweep(
 
   const scanResult = await createScanner().scan({ roots, exclude, include });
   for (const warning of scanResult.warnings) warn(warning, color);
-  reportNameMatches(
+  const nameNotes = collectNameNotes(
     scanResult.excludeMatches,
     scanResult.includeMatches,
     color,
   );
+  // 运行时自述与名单回执同判据: 都只在真终端展示, 非 TTY (脚本 / 管道) 下不增噪音
+  const tty = process.stdout.isTTY === true;
+  const runtime = tty ? runtimeLabel : undefined;
 
   const sizeResult = await createSizer().measure(
     scanResult.hits.map((hit) => hit.target),
@@ -433,7 +443,17 @@ async function sweep(
   const entries = toEntries(scanResult.hits, sizeResult);
   const home = homedir();
   if (!options.yes) {
-    print(render({ mode: 'preview', roots, entries, color, home }));
+    print(
+      render({
+        mode: 'preview',
+        roots,
+        entries,
+        color,
+        home,
+        notes: nameNotes,
+        runtime,
+      }),
+    );
     return 0;
   }
 
@@ -471,6 +491,8 @@ async function sweep(
       color,
       home,
       releasedBytes,
+      notes: nameNotes,
+      runtime,
     }),
   );
 

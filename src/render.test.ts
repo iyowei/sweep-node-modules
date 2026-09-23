@@ -96,6 +96,38 @@ describe('顶栏', () => {
 
     expect(head).toContain('0 个根');
   });
+
+  test('传入 runtime 时接在顶栏尾部, 缺省不显示', () => {
+    const [withRuntime] = linesOf(
+      render({ ...previewOptions, runtime: 'bun 1.4.2' }),
+    );
+    const [without] = linesOf(render(previewOptions));
+
+    expect(withRuntime).toContain('bun 1.4.2');
+    expect(without).not.toContain('bun');
+  });
+
+  test('notes 呈为顶栏下方的中性块行, 缺省无', () => {
+    const lines = linesOf(
+      render({ ...previewOptions, notes: ['排除生效: beta (1 处)'] }),
+    );
+
+    expect(lines[1]).toContain('░ 排除生效: beta (1 处)');
+    expect(linesOf(render(previewOptions))[1]).not.toContain('排除生效');
+  });
+
+  test('空结果时 notes 仍呈现 (置于未发现行之前)', () => {
+    const lines = linesOf(
+      render({
+        ...previewOptions,
+        entries: [],
+        notes: ['排除生效: beta (1 处)'],
+      }),
+    );
+
+    expect(lines[1]).toContain('排除生效');
+    expect(lines[2]).toContain('未发现 node_modules');
+  });
 });
 
 describe('清单行', () => {

@@ -27,6 +27,16 @@ declare const Bun: {
 /** 运行时探测: 功能检测, 有 Bun 走 Bun 实现, 无则回退 Node 实现 */
 export const isBun: boolean = typeof Bun !== 'undefined';
 
+/** 版本表: 两个运行时各自在 process.versions 里自报版本 (bun 报在 .bun, node 报在 .node) */
+const versions = process.versions as Record<string, string | undefined>;
+const runtimeName = isBun ? 'bun' : 'node';
+
+/**
+ * 运行时自述 (如 `bun 1.4.2`): 供输出如实展示本次的执行环境。
+ * 取运行时自报字段而非外部探测 —— 直接跑 `node dist/cli.js` 或经启动器跑, 报的都是真身。
+ */
+export const runtimeLabel: string = `${runtimeName} ${versions[runtimeName] ?? 'unknown'}`;
+
 export interface SpawnResult {
   /** 标准输出全文 (UTF-8) */
   stdout: string;

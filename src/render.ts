@@ -64,6 +64,10 @@ export interface RenderOptions {
   releasedBytes?: number;
   /** 路径风味 (分隔符与大小写敏感性): 缺省平台原生; 传入 WIN32_STYLE 可在 posix 上测 win32 语义 */
   pathStyle?: PathStyle;
+  /** 运行时自述 (如 `bun 1.4.2`): 提供时接在顶栏尾部; 缺省不显示 (调用方按 TTY 决定) */
+  runtime?: string;
+  /** 顶栏下方的中性提示行 (如名单生效回执); 缺省无。走 stdout 而非 stderr: 它们是本次运行的说明, 与清单同属一次输出 */
+  notes?: string[];
 }
 
 /**
@@ -127,15 +131,21 @@ export function render(options: RenderOptions): string {
     roots.length > 0 && roots.length <= ROOT_LIST_LIMIT
       ? `${roots.length} 个根: ${roots.map((root) => oneLine(shortenPath(root, style, home))).join(' · ')}`
       : `${roots.length} 个根`;
+  const runtime = options.runtime ? ` · ${oneLine(options.runtime)}` : '';
   const head = paint(
-    `${BAR_BLOCK} ${BANNER}  ${mode === 'execute' ? '执行' : '预览'} · ${scope}`,
+    `${BAR_BLOCK} ${BANNER}  ${mode === 'execute' ? '执行' : '预览'} · ${scope}${runtime}`,
     '1;7',
     color,
+  );
+  // 顶栏下方的中性提示: 与清单同一视觉语言 (缩进 2 + 中性块), 不打断顶栏与清单的紧邻关系
+  const notes = (options.notes ?? []).map(
+    (note) => `  ${paint(`${NEUTRAL_BLOCK} ${oneLine(note)}`, '2', color)}`,
   );
 
   if (entries.length === 0) {
     return [
       head,
+      ...notes,
       `  ${paint(`${NEUTRAL_BLOCK} 未发现 node_modules`, '2', color)}`,
     ].join('\n');
   }
@@ -177,7 +187,7 @@ export function render(options: RenderOptions): string {
       ? footExecute(rows, color, releasedBytes)
       : `  ${paint(TOTAL_BLOCK, '7', color)} ${paint(`合计 ${rows.length} 处 · ${formatBytes(sum(rows))}`, '1', color)}   ${hint}`;
 
-  return [head, ...body, foot].join('\n');
+  return [head, ...notes, ...body, foot].join('\n');
 }
 
 /** 执行模式末行: 成功 / 失败计数汇总 (取代预览的合计); 提供 releasedBytes 时补释放体积 */
