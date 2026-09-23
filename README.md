@@ -28,6 +28,9 @@ sweep-nm --yes
 
 # 临时追加排除(可重复)
 sweep-nm --exclude fiu-kits --exclude shortime
+
+# 初始化向导: 交互式生成配置文件
+sweep-nm init
 ```
 
 ## 配置
@@ -46,7 +49,7 @@ sweep-nm --exclude fiu-kits --exclude shortime
 
 - `roots`: 扫描根目录, 任意多个; 重复或嵌套的根按真实路径去重。
 - `exclude`: 排除名单; 从根到 `node_modules` 的任意一级目录名命中即跳过 (多排除 = 少删, 安全方向)。
-- 配置文件不存在时, 以当前工作目录为根, 并明确提示。
+- 首次运行且无配置: 交互终端下自动进入初始化向导; 非交互环境 (脚本等) 以当前工作目录为根并提示, 不询问; 随时可用 `sweep-nm init` 重进向导。
 
 ## 文档
 

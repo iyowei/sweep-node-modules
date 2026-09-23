@@ -11,6 +11,7 @@
 | 日期 | 修订 |
 |------|------|
 | 2026-09-23 | 初稿: 立项设计, 含命令面、配置规格、扫描与安全闸、代码结构、测试策略、明确不做清单 |
+| 2026-09-23 | 补记: 配置初始化模型 (`sweep-nm init` 子命令 + 首次自动向导), 见 [ADR 0004](../adrs/0004-config-initialization-wizard.md) |
 
 ## 一、定位与成功标准
 
@@ -29,11 +30,12 @@
 sweep-nm                    预览: 清单 + 体积 + 合计, 零副作用
 sweep-nm --yes              执行删除
 sweep-nm --exclude <名字>   临时追加排除, 可重复
+sweep-nm init               初始化向导: 交互式生成配置文件
 sweep-nm --help             帮助
 ```
 
 - 项目名 `sweep-node-modules`, 命令名取短变体 `sweep-nm` (仿 `flatten-folder-cli` → `flatten-folder` 的旧例)。
-- **单命令形态, 不设子命令层**: 名称即单一职责; 将来若出现其他清理需求, 另立兄弟项目, 不在此工具内砌子命令。
+- **主命令 + 子命令形态**: 缺省 `sweep-nm` 即清理流程 (预览; 加 `--yes` 执行); `init` 为子命令, 承载初始化向导。子命令位只为工具自身的辅助动作保留, 不承载其他清理能力 (模拟器等另立兄弟项目)。
 - 判定模型与执行模型见 [ADR 0002](../adrs/0002-fixed-config-and-preview-execution.md)。
 
 ## 三、配置规格
@@ -53,8 +55,16 @@ sweep-nm --help             帮助
 | `exclude` | `string[]` | 排除名单; 从根到命中点的任意一级目录名命中即跳过 |
 
 - 排除语义取「任意一级目录名命中」: 写 `fiu-kits` (项目名) 或 `shortime` (容器名) 都成立; 多排除 = 少删, 天然落在安全方向。
-- 配置文件不存在: 以当前工作目录为根并明确提示 (不报错)。
+- 配置缺失与 `sweep-nm init` 的行为见下方「配置初始化模型」。
 - 命令行 `--exclude` 与配置合并。
+
+### 配置初始化模型
+
+- **首次运行且无配置**: TTY 下自动进入初始化向导; 非 TTY 静默回退「以当前工作目录为根」并明确提示, 不询问 (防卡死脚本与将来的定时任务)。
+- **`sweep-nm init`**: 显式重进向导, 重写配置。
+- **向导内容**: 两问, 扫描根 (默认当前目录) 与排除名单 (可留空); 生成后继续本次预览, 不吞掉本次执行。
+- **覆盖保护**: 配置已存在时先确认是否覆盖, 默认否; 中途取消不落盘。
+- 实现边界与决策见 [ADR 0004](../adrs/0004-config-initialization-wizard.md)。
 
 ## 四、扫描与体积规格
 
@@ -96,13 +106,14 @@ sweep-nm --help             帮助
 src/
 ├── cli.ts      # 入口: shebang、参数解析、流程编排、帮助
 ├── config.ts   # 配置读取与合并 (配置文件 + --exclude)
+├── init.ts     # 初始化向导: 交互 IO (readline) 与配置生成纯逻辑分离
 ├── scan.ts     # 纯函数: 递归扫描 (剪枝/排除/去重)
 ├── size.ts     # 体积: 批量 du 调用与解析
 ├── guard.ts    # 安全闸: 删除目标合法性校验
 └── *.test.ts   # 与模块同名并置的单测
 ```
 
-纯逻辑 (scan / guard) 与 IO (fs / spawn) 分离, 纯逻辑直接单测; 文件保持小块, 单文件职责单一。
+纯逻辑 (scan / guard / init 的配置生成) 与 IO (fs / spawn / readline) 分离, 纯逻辑直接单测; 文件保持小块, 单文件职责单一。
 
 ## 八、测试策略
 
@@ -116,8 +127,9 @@ src/
 | 安全闸 | 非 `node_modules` 末段、根外路径、`/` 与 `$HOME` 一律拒绝 |
 | 执行 | 真删 fixture, 目标消失且邻居完好 |
 | 失败路径 | 注入不可删目标, 退出码非零且汇总呈现 |
+| 初始化 | 非 TTY + 无配置走 cwd 回退不阻塞; 配置生成纯逻辑 (答案 → 配置对象); 已存在时默认不覆盖 |
 
-测试文件按语义命名 (如 `scan.test.ts`, `guard.test.ts`)。
+测试文件按语义命名 (如 `scan.test.ts`, `guard.test.ts`); 向导的 readline 交互本身不做端到端自动化, 由「答案到配置对象再到落盘决策」的纯逻辑单测覆盖。
 
 ## 九、错误与边界
 
@@ -154,3 +166,4 @@ docs/
 - [ADR 0001: 工作区级清理工具定位](../adrs/0001-workspace-level-cleaner.md)
 - [ADR 0002: 固定配置与预览执行模型](../adrs/0002-fixed-config-and-preview-execution.md)
 - [ADR 0003: bun + TypeScript 零运行时依赖](../adrs/0003-bun-zero-runtime-deps.md)
+- [ADR 0004: 配置初始化向导](../adrs/0004-config-initialization-wizard.md)

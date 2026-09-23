@@ -7,3 +7,4 @@
 | [0001](0001-workspace-level-cleaner.md) | 工作区级清理工具定位 | 已接受 | 2026-09-23 |
 | [0002](0002-fixed-config-and-preview-execution.md) | 固定配置与预览执行模型 | 已接受 | 2026-09-23 |
 | [0003](0003-bun-zero-runtime-deps.md) | bun + TypeScript 零运行时依赖 | 已接受 | 2026-09-23 |
+| [0004](0004-config-initialization-wizard.md) | 配置初始化向导 | 已接受 | 2026-09-23 |
