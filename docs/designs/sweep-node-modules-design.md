@@ -18,6 +18,7 @@
 | 2026-09-23 | 分册索引收为指针行; 设计索引权威归 [designs/README.md](README.md) (含推荐阅读顺序)                                                              |
 | 2026-09-23 | 补记: 三平台 (Windows / macOS / Linux) 可移植性与配置定位, 见 [ADR 0007](../adrs/0007-platform-portability.md); CLI 输出规格升级为色块视觉规范  |
 | 2026-09-23 | 实现落地回写: 模块表补 delete / 门面 / bench / scripts; 测试策略补实现覆盖指针; 关联 [ADR 0008](../adrs/0008-transcription-kit.md) 转写契约套件 |
+| 2026-09-23 | 分发形态: 编译产物 + 单文件打包发布到 npm (`@iyowei/sweep-node-modules`); 「明确不做」清单移除 npm 发布项                                       |
 
 ## 分册索引
 
@@ -89,8 +90,7 @@ scripts/transcription/  # 转写契约套件的验收器与变异生成器 (见 
 - 活跃度智能推荐;
 - `--json` 等机器输出 (暂无下游消费者);
 - 体积阈值过滤;
-- 其他清理能力 (模拟器等) 与共享基础库抽取;
-- npm 发布。
+- 其他清理能力 (模拟器等) 与共享基础库抽取。
 
 以上均等真实需要出现时再议。
 
