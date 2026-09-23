@@ -17,7 +17,7 @@
 
 - 汇总全部命中路径后, **批量 spawn 一次** `/usr/bin/du -sk <paths...>` 解析输出 (与 Finder 口径一致, 快);
 - 绝对路径调用, 天然绕开交互 shell 的 alias (历史坑: `du` 被 alias 到别的工具, 手工统计静默失效);
-- 不实现无 `du` 的降级 (本工具 macOS 自用, 见 [ADR 0003](../adrs/0003-bun-zero-runtime-deps.md))。
+- 不实现无 `du` 的降级 (本工具 macOS 自用, 见 [ADR 0003](../adrs/0003-zero-runtime-deps.md))。
 
 ## 性能要点 (热路径 = 目录遍历, 性能不能差)
 

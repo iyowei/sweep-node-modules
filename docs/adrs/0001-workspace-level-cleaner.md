@@ -54,4 +54,4 @@
 **关联引用**
 
 - 判定模型见 [ADR 0002](0002-fixed-config-and-preview-execution.md)。
-- 技术栈见 [ADR 0003](0003-bun-zero-runtime-deps.md)。
+- 依赖与构建策略见 [ADR 0003](0003-zero-runtime-deps.md)。

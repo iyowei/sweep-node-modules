@@ -87,7 +87,7 @@ bin/
 
 - [ADR 0001: 工作区级清理工具定位](../adrs/0001-workspace-level-cleaner.md)
 - [ADR 0002: 固定配置与预览执行模型](../adrs/0002-fixed-config-and-preview-execution.md)
-- [ADR 0003: bun + TypeScript 零运行时依赖](../adrs/0003-bun-zero-runtime-deps.md)
+- [ADR 0003: 零运行时依赖](../adrs/0003-zero-runtime-deps.md)
 - [ADR 0004: 配置初始化向导](../adrs/0004-config-initialization-wizard.md)
 - [ADR 0005: 工程闸门与提交钩子](../adrs/0005-engineering-gates-and-hooks.md)
 - [ADR 0006: 双运行时支持与 Bun 优先的 API 策略](../adrs/0006-dual-runtime-bun-first.md)

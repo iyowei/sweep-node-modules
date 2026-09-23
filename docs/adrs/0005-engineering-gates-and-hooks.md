@@ -56,5 +56,5 @@
 
 **关联引用**
 
-- 技术栈见 [ADR 0003](0003-bun-zero-runtime-deps.md)。
+- 依赖与构建策略见 [ADR 0003](0003-zero-runtime-deps.md)。
 - 门禁的操作级细节以仓库根 `lefthook.yml`、`.oxlintrc.json`、`.prettierrc`、`.editorconfig` 为准, 本条不复述。
