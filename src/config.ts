@@ -219,10 +219,25 @@ export async function loadResolvedConfig(
   return result;
 }
 
-/** 合并名单 (排除与包含共用): 配置名单在前、命令行追加在后, 跨来源去重 (保留首见顺序) */
+/**
+ * 合并名单 (排除与包含共用): 配置名单在前、命令行追加在后, 跨来源去重 (保留首见顺序);
+ * 同时静默剔除 node_modules 自身, 它是本工具唯一的目标, 写进两份名单里都不成立:
+ * 列入排除名单等于排掉唯一操作目标 (工具彻底失效); 列入包含名单则是永久零命中
+ * (扫描读到 node_modules 即剪枝, 该名字只可能落在候选路径的末段, 而名单判定只看中间级别,
+ * 见 scan-native.ts 中 Candidate.segments 的「末段恒为 node_modules」)。
+ *
+ * 剔除只做静默丢弃, 不报错、不阻断、不告警; 匹配口径与其余名单判定一致, 按名精确匹配且区分大小写。
+ * 内含 include 侧的一个易误解点: 剔空后等于「不过滤」(空数组即不过滤, 见 Config.include),
+ * 而不是「只扫 node_modules」。
+ *
+ * 落点选在合并收口处而非逐个扫描候选改判定: 所有消费方都经此处取名单, 三名候选
+ * (prune / parallel / native) 天然不含该名字, 一处收口胜过三处判定修改。
+ */
 export function mergeNames(
   configNames: string[],
   cliNames: string[],
 ): string[] {
-  return [...new Set([...configNames, ...cliNames])];
+  return [...new Set([...configNames, ...cliNames])].filter(
+    (name) => name !== 'node_modules',
+  );
 }

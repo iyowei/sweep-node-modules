@@ -350,4 +350,29 @@ describe('config 契约: 合并 (mergeNames)', () => {
     expect(config).toEqual(['a']);
     expect(cli).toEqual(['b']);
   });
+
+  test('静默剔除 node_modules: 配置侧与命令行侧均不保留', () => {
+    expect(mergeNames(['node_modules', 'dist'], ['docs-site'])).toEqual([
+      'dist',
+      'docs-site',
+    ]);
+    expect(mergeNames(['dist'], ['node_modules'])).toEqual(['dist']);
+    expect(mergeNames(['node_modules'], ['node_modules'])).toEqual([]);
+  });
+
+  test('剔除不影响其余名字: 去重与首见顺序照旧', () => {
+    expect(
+      mergeNames(['node_modules', 'a', 'b'], ['b', 'node_modules', 'c']),
+    ).toEqual(['a', 'b', 'c']);
+  });
+
+  test('剔除按精确匹配: 大小写不同者原样保留', () => {
+    expect(mergeNames(['Node_Modules'], [])).toEqual(['Node_Modules']);
+  });
+
+  test('剔空后为空数组: include 侧等于不过滤, 而非只扫 node_modules', () => {
+    // 包含名单剔空即不过滤 (空数组语义见 Config.include), 这是易误解点, 单独钉住
+    expect(mergeNames([], ['node_modules'])).toEqual([]);
+    expect(mergeNames(['node_modules'], [])).toEqual([]);
+  });
 });
