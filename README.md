@@ -6,7 +6,9 @@
 
 ## 要求
 
-- 运行时二选一: **bun 或 node** 皆可 (双运行时, 装任一即可用)。
+- 运行时: 业务逻辑**双运行时** (有 bun 走 bun, 否则 node); 但**启动入口的要求随安装方式不同**:
+  - **npm 安装**: 入口 `bin/sweep-nm.mjs` 的 shebang 是 node, npm 生成的 shim 按它选解释器, 故**需有 node** (npm 用户必然满足); 有 bun 时仍优先用 bun 跑业务逻辑。
+  - **从源码使用**: 入口是 sh / cmd 启动器 (由系统 shell 执行, 不依赖 node), 装 **bun 或 node 任一**即可。
 - 取最新一代运行时 API: bun 任意近期版本; node 需原生支持 TypeScript 直跑的版本 (从源码运行受此约束; npm 安装拿到的是编译产物 JS, 跑 JS 不必 TS 直跑能力, 但两种获取方式取同一版本下限; 版本快照与实测记录见 [ADR 0006](docs/adrs/0006-dual-runtime-bun-first.md))。
 - 零第三方运行时依赖 (只用运行时内置能力)。
 - 平台: Windows / macOS / Linux 三平台均可运行 (见 [ADR 0007](docs/adrs/0007-platform-portability.md))。
@@ -28,7 +30,7 @@ chmod +x bin/sweep-nm
 ln -sf "$HOME/self/development/sweep-node-modules/bin/sweep-nm" ~/.local/bin/sweep-nm
 ```
 
-> 两种方式都支持 Bun / Node 双运行时 (装任一即可用); 从源码安装的 Windows 用户入口为 `bin\sweep-nm.cmd`。
+> 业务逻辑两种方式都跑 Bun / Node 双运行时, 但**入口要求不同**: npm 路径的入口由 node 启动 (需有 node), 源码路径的 shell 启动器装任一即可 (详见上「要求」节)。从源码安装的 Windows 用户入口为 `bin\sweep-nm.cmd`。
 
 ## 使用
 
