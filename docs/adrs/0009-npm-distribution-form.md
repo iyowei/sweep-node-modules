@@ -38,7 +38,14 @@
 
 选择原因: 以最小代价解掉「只装 node 的机器在 npm 通道不可用」这一冲突, 只为分发加一条构建命令, 开发运行路径与单源码原则都不动; 分发产物是单文件 JS, 无平台分叉、无运行时捆绑。
 
-> **适用边界（勿与 ADR 0006 的目标混读）**: 本 ADR 解决的是「只装 node 的机器跑不了源码形态」;**npm 通道本身仍需有 node**: 入口 `bin/sweep-nm.mjs` 的 shebang 是 node, npm shim 据此选解释器, 故只装 bun 的机器在 npm 通道上仍不可用 (请改用源码方式安装, 其 sh / cmd 启动器由系统 shell 执行、不依赖 node)。ADR 0006「装任一运行时即可使用」的适用范围是**业务逻辑**与**从源码使用的入口**; npm 通道的运行时挑选 (Bun 优先) 只在入口被 node 启动之后生效。
+> **适用边界（勿与 ADR 0006 的目标混读）**: 本 ADR 解决的是「只装 node 的机器跑不了源码形态」。安装通道对 node 的依赖须按**包管理器**区分 (实测: 入口文件的 shebang 是 node, 而 Unix 的 bin 是符号链接、执行时由内核读 shebang 选解释器, 应用层无法介入):
+>
+> - **`npm install -g`**: 需有 node (npm 用户必然满足)。
+> - **`bun install -g`**: 同样生成指向本入口的符号链接, 故**同样需有 node**。
+> - **`bunx <pkg>`**: **不生成符号链接、不经 shebang**, 由 bun 直接执行目标文件, 故**只有 bun 的机器可用** (本机实测: 在仅含 bun/bunx 的 PATH 下 `bunx cowsay@1.6.0` 正常运行, 该包 shebang 同为 node)。
+> - **从源码**: sh / cmd 启动器由系统 shell 执行, 装 bun 或 node 任一即可。
+>
+> ADR 0006「装任一运行时即可使用」的适用范围是**业务逻辑**与**从源码使用的入口**; npm / bun install 两个通道的运行时挑选 (Bun 优先) 只在入口被 node 启动之后生效。
 
 ## 后果与权衡妥协 (Consequences & Trade-offs)
 
