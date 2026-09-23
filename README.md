@@ -119,21 +119,7 @@ sweep-nm init
 
 ## 开发
 
-```shell
-bun install        # 安装 devDependencies, 并自动装好 git 钩子 (lefthook)
-
-bun run typecheck  # tsc --noEmit
-bun run lint       # oxlint
-bun run format     # prettier --write
-bun test           # bun test (契约 / 鲁棒 / 压测 / 双载体 e2e / 伪终端冒烟)
-bun run bench      # 基准四组 (扫描 / 体积 / 真实工作区 / 压测)
-bun run conformance -- --target "bun src/cli.ts"  # 转写一致性验收 (金样本语料见 docs/protocol/)
-bun run build      # 打包单文件 dist/cli.js (npm 分发的编译产物; 发布时由 prepublishOnly 自动跑)
-```
-
-运行时双跑验证: `bun src/cli.ts` 与 `node src/cli.ts` 均可直接运行。
-
-提交与推送由 lefthook 把关: pre-commit 增量 (prettier 重暂存 + oxlint + 全量类型检查), pre-push 全量只读 (typecheck / test / oxlint / prettier `--check`)。
+环境准备、常用命令、双运行时验证与提交钩子, 见 [开发指南](docs/development.md)。
 
 ## 文档
 

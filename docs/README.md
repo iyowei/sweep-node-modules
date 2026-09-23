@@ -23,3 +23,9 @@
 **转写契约套件**
 [转写契约套件 (transcription kit)](protocol/README.md)
 面向未来多语言精准转写的工具包: 编号行为契约、金样本语料、确定性验收器、变异自证与实施提示词; 见 [ADR 0008](adrs/0008-transcription-kit.md)。
+
+## 开发
+
+**开发指南**
+[开发指南](development.md)
+环境准备、常用命令、双运行时验证与提交钩子; 面向仓库维护者与贡献者。使用说明见根 [README](../README.md)。
