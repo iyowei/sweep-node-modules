@@ -57,6 +57,8 @@ export interface ExpectSpec {
   /** 「不该出现」面: 剪枝 / 排除 / 诱饵类用例的禁含断言 */
   stdoutMustNotContain?: string[];
   stderrContains?: string[];
+  /** 「不该出现」面: 「正确行为是静默」类用例的 stderr 禁含断言 */
+  stderrMustNotContain?: string[];
   fs?: FsExpectation[];
 }
 
@@ -237,6 +239,7 @@ function validateExpect(expect: unknown, problems: string[]): void {
     'stdoutContains',
     'stdoutMustNotContain',
     'stderrContains',
+    'stderrMustNotContain',
   ] as const) {
     const value = record[key];
     if (

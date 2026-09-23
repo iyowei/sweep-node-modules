@@ -1,0 +1,33 @@
+{
+  "id": "scan-node-modules-and-git-in-lists-noop",
+  "specRefs": ["BC-34"],
+  "fixture": {
+    "projects": [{ "dir": "zone/alpha/app" }, { "dir": "zone/beta/app" }]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"exclude\": [\".git\"],\n  \"include\": [\".git\"]\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" },
+    "argv": ["--exclude", "node_modules", "--include", "node_modules"]
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutContains": [
+      "$FIXTURE/zone/alpha/app",
+      "$FIXTURE/zone/beta/app",
+      "合计 2 处"
+    ],
+    "stdoutMustNotContain": ["未发现 node_modules"],
+    "stderrMustNotContain": [
+      "排除名未匹配",
+      "包含名未匹配",
+      "包含名单无一条命中"
+    ]
+  }
+}

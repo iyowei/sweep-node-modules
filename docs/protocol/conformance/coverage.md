@@ -3,10 +3,14 @@
 > 判据 (见 [套件门面](../README.md)「维护规则」): 每 case `specRefs` 非空且指向真实条款; 产出「契约条款 × 语料」
 > 覆盖表, 未被覆盖的条款要么补 case, 要么显式标注「不可黑盒验收」并给出理由。
 > **终稿数据**: 双载体 (bun / node) 各三连跑全绿, 判定层逐字节一致;
-> 判定基准为 2026-09-23 白名单 (`include`) 落地后的快照 (`cli.ts` 名单反馈通道扩展后);
+> 判定基准为白名单 (`include`) 落地及其后续修正后的实现态: 起点为白名单落地提交 `15bc404`,
+> 含 `7e2c9bd` (名单静默剔除) 与 `b8297e9` (include 命中计数修正); 本次校准的末位提交为 `15e5b00`;
 > 可追溯校验 (jq): 台账与语料引用逐条对齐, 无悬空引用, 未被引用者恰为下表豁免项。
 > **派生声明**: 本表由 `corpus/*.json` 的 `specRefs` 机械汇总 (jq) 生成, 权威在语料与条款台账,
 > 本表是派生索引, 严禁反向手改本表来「修」覆盖关系。
+> **本次加固依据 (维护规则「只增不改既有期望」的三向定责记录)**: 新增语料 `scan-node-modules-and-git-in-lists-noop` (BC-34),
+> 并给 `scan-include-exclude-priority` 补 `stderrMustNotContain` 与 BC-33 背书; 既有期望逐条未动, 属加固而非改判。
+> 定责结论: 修条款 (BC-33 补计数口径 / BC-34 新立) + 修语料 (两处), 实现侧对照 `7e2c9bd` 与 `b8297e9` 已正确, 无需改实现。
 
 ## 一、条款 × 语料覆盖
 
@@ -41,7 +45,8 @@
 | BC-30 | 1      | cli-help                                                                                                                                                                                                                                                                                     |
 | BC-31 | 2      | scan-include-cli-merge, scan-include-config                                                                                                                                                                                                                                                  |
 | BC-32 | 1      | scan-include-exclude-priority                                                                                                                                                                                                                                                                |
-| BC-33 | 1      | scan-include-unmatched-warn                                                                                                                                                                                                                                                                  |
+| BC-33 | 2      | scan-include-exclude-priority, scan-include-unmatched-warn                                                                                                                                                                                                                                   |
+| BC-34 | 1      | scan-node-modules-and-git-in-lists-noop                                                                                                                                                                                                                                                      |
 | OF-01 | 4      | render-banner-4-roots, render-empty-result, render-path-tilde, scan-basic-preview                                                                                                                                                                                                            |
 | OF-02 | 4      | render-tier-mid-and-order, scan-basic-preview, scan-order-target-asc, size-unmeasured-preview                                                                                                                                                                                                |
 | OF-03 | 13     | delete-execute-ok, render-align-cjk, render-path-tilde, scan-basic-preview, scan-exclude-cli-merge, scan-exclude-config, scan-git-bait, scan-include-cli-merge, scan-include-config, scan-include-exclude-priority, scan-nested-prune, scan-root-symlink-followed, scan-symlink-not-followed |
@@ -53,37 +58,41 @@
 | OF-09 | 3      | delete-execute-multi-summary, delete-execute-ok, size-unmeasured-blocks-delete                                                                                                                                                                                                               |
 | OF-10 | 2      | cli-help, render-no-color-degraded (非 TTY 面; TTY 彩色面见下)                                                                                                                                                                                                                               |
 | OF-11 | 2      | size-unmeasured-blocks-delete, size-unmeasured-preview                                                                                                                                                                                                                                       |
-| OF-12 | 7      | cli-help, cli-unknown-arg, scan-basic-preview, scan-exclude-unmatched-warn, scan-include-unmatched-warn, scan-root-missing-warn, scan-unreadable-dir-warn                                                                                                                                    |
+| OF-12 | 7      | cli-help, cli-unknown-arg, scan-basic-preview, scan-exclude-unmatched-warn, scan-include-unmatched-warn, scan-root-missing-warn, scan-unreadable-dir-warn (非 TTY 面; 名单生效回执为 TTY 专属, 见下)                                                                                         |
 | EC-05 | 1      | delete-partial-failure-shell                                                                                                                                                                                                                                                                 |
 
 ## 二、未覆盖条款 (显式标注与理由)
 
-| 条款               | 状态                | 理由                                                                                                                                           |
-| ------------------ | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| BC-13              | 不可黑盒 (竞态)     | 「target 在扫描命中后、体积统计前消失」需竞态时序缝, CLI 黑盒面不可静态构造; 语义与 EC-01 同源 (模块级已钉死)                                  |
-| BC-21 / BC-22      | 不可黑盒 (竞态)     | 安全闸「拒绝 → 整批拒绝」需在校验与删除之间换掉目标 (转写 / 逃逸 / 重复), 属竞态时序缝; 语义见 `deletion-guard.md`「校验不变量」, 模块级已钉死 |
-| EC-01              | 不可黑盒 (竞态)     | TOCTOU missing 桶同上                                                                                                                          |
-| EC-02              | 不可黑盒 (竞态)     | 与 BC-21 / BC-22 同源                                                                                                                          |
-| EC-03              | 不可黑盒 (平台矩阵) | win32 路径折叠与 `%APPDATA%` 默认路径需 win32 宿主 (或平台 CI); 模块级注入 `platform` 已钉死                                                   |
-| EC-04              | 不可黑盒 (不可造)   | 「符号链接作删除目标只删链接本身」: 扫描不跟进符号链接, 黑盒面拿不到这样的删除目标; 模块级已钉死                                               |
-| EC-06 / OF-04 大档 | 成本性未覆盖        | 大档 (≥1GiB) 展示需真实写入 1 GiB 数据, 超出语料运行预算; 档位逻辑经小 / 中两档与 OF-05 覆盖                                                   |
-| OF-10 TTY 彩色面   | 二期 (pty)          | 彩色 / 着色只在 TTY 下开启, 需 pty 运行器 (设计定为二期); 非 TTY 降级面已覆盖                                                                  |
+| 条款               | 状态                | 理由                                                                                                                                                  |
+| ------------------ | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BC-13              | 不可黑盒 (竞态)     | 「target 在扫描命中后、体积统计前消失」需竞态时序缝, CLI 黑盒面不可静态构造; 语义与 EC-01 同源 (模块级已钉死)                                         |
+| BC-21 / BC-22      | 不可黑盒 (竞态)     | 安全闸「拒绝 → 整批拒绝」需在校验与删除之间换掉目标 (转写 / 逃逸 / 重复), 属竞态时序缝; 语义见 `deletion-guard.md`「校验不变量」, 模块级已钉死        |
+| EC-01              | 不可黑盒 (竞态)     | TOCTOU missing 桶同上                                                                                                                                 |
+| EC-02              | 不可黑盒 (竞态)     | 与 BC-21 / BC-22 同源                                                                                                                                 |
+| EC-03              | 不可黑盒 (平台矩阵) | win32 路径折叠与 `%APPDATA%` 默认路径需 win32 宿主 (或平台 CI); 模块级注入 `platform` 已钉死                                                          |
+| EC-04              | 不可黑盒 (不可造)   | 「符号链接作删除目标只删链接本身」: 扫描不跟进符号链接, 黑盒面拿不到这样的删除目标; 模块级已钉死                                                      |
+| EC-06 / OF-04 大档 | 成本性未覆盖        | 大档 (≥1GiB) 展示需真实写入 1 GiB 数据, 超出语料运行预算; 档位逻辑经小 / 中两档与 OF-05 覆盖                                                          |
+| OF-10 TTY 彩色面   | 二期 (pty)          | 彩色 / 着色只在 TTY 下开启, 需 pty 运行器 (设计定为二期); 非 TTY 降级面已覆盖                                                                         |
+| 运行时自述         | 二期 (pty)          | 顶栏尾部的运行时版本段 (` · bun 1.4.2`) 仅在 stdout 为真终端时出现, 非 TTY 下整段省略, 需 pty 运行器; 不编条款号, 见 `behavior-contract.md`「OF」区注 |
+| 名单生效回执       | 二期 (pty)          | 顶栏下方的 `░ 排除生效 / 包含命中` 回执行同属 TTY 专属面 (非 TTY 下整段省略), 需 pty 运行器; 名单未匹配警示走 stderr, 那一面已由语料覆盖              |
 
 ## 三、变异自证 (语料抓缺陷能力)
 
-inject mutant (经 `make-mutants.ts` 从冻结源复制 + 单行级补丁生成), 逐一对全量语料跑:
-**全部被抓住** (判据要求 ≥3)。经多轮复核 (含新快照重建), mutant 重建后判定数字
-完全一致 (26 / 11 / 4 / 3 / 6 / 26), 抓取面稳定。
+inject mutant (经 `make-mutants.ts` 从冻结源复制 + 单行级补丁生成), 逐一对全量语料 (本次快照 45 条) 跑:
+**全部被抓住** (判据要求 ≥3 条用例)。五个 mutant 三连跑数字完全一致 (27 / 11 / 3 / 6 / 26),
+抓取面稳定; `sort-missing` 见下方观察, 数字本身不稳定。
 
-| mutant (注入缺陷)                | 抓住它的用例数 | 代表用例                                                                   |
-| -------------------------------- | -------------- | -------------------------------------------------------------------------- |
-| prune-negated (剪枝谓词取反)     | 26             | scan-basic-preview, scan-nested-prune, scan-include-config                 |
-| exit-swallowed (退出码吞掉)      | 11             | cli-unknown-arg, config-corrupt-json, size-unmeasured-blocks-delete        |
-| sort-missing (排序缺失)          | 4              | scan-order-target-asc, scan-basic-preview, scan-include-cli-merge          |
-| exclude-silent (排除静默失效)    | 3              | scan-exclude-config, scan-exclude-cli-merge, scan-include-exclude-priority |
-| message-removed (提示语删改)     | 6              | render-empty-result, render-banner-4-roots, scan-include-unmatched-warn    |
-| size-unit-wrong (体积计数单位错) | 26             | render-tier-mid-and-order, scan-basic-preview, scan-include-cli-merge      |
+| mutant (注入缺陷)                | 抓住它的用例数    | 代表用例                                                                   |
+| -------------------------------- | ----------------- | -------------------------------------------------------------------------- |
+| prune-negated (剪枝谓词取反)     | 27                | scan-basic-preview, scan-nested-prune, scan-include-config                 |
+| exit-swallowed (退出码吞掉)      | 11                | cli-unknown-arg, config-corrupt-json, size-unmeasured-blocks-delete        |
+| sort-missing (排序缺失)          | 4 (三连跑 2 至 5) | scan-order-target-asc, scan-basic-preview, scan-include-cli-merge          |
+| exclude-silent (排除静默失效)    | 3                 | scan-exclude-config, scan-exclude-cli-merge, scan-include-exclude-priority |
+| message-removed (提示语删改)     | 6                 | render-empty-result, render-banner-4-roots, scan-include-unmatched-warn    |
+| size-unit-wrong (体积计数单位错) | 26                | render-tier-mid-and-order, scan-basic-preview, scan-include-cli-merge      |
 
-观察: `sort-missing` 抓取面最窄, 因它依赖「并发完成序 ≠ 升序」; 语料以同体积清单
-(`scan-order-target-asc` 与 `scan-include-cli-merge`) 作主抓点, 抓取稳定
-(三轮重跑均被抓)。
+观察: `sort-missing` 抓取面最窄, 因它依赖「并发完成序 ≠ 升序」是否在本次调度中落败,
+抓到的用例数随调度波动 (三连跑实测 4 / 5 / 2), 是本表唯一数字不稳定的 mutant,
+且最窄那次 (2 条) 未达本表的「≥3」判据 (已登记的缺口, 未见 0 抓)。语料以同体积清单
+(`scan-order-target-asc` 与 `scan-include-cli-merge`) 作主抓点, 该对三轮重跑均被抓,
+波动只在边缘用例上。

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "corpus.schema.json",
   "title": "转写契约套件 · 金样本语料 (conformance corpus case)",
-  "description": "每个 .json 文件承载一条用例, 文件名须为 <id>.json。三条设计原则: 其一, fixture 声明式 (工作区树由字段描述, 不写脚本, 由验收器解释执行); 其二, env 白名单 (被测进程只拿最小环境白名单, 不继承宿主环境, case 只声明增量, 保可移植); 其三, expect 四件套 (exitCode / stdoutExact / contains / fs)。字符串字段内可用 $FIXTURE 引用 fixture 根 (realpath 形态的绝对路径)。套件级语义与维护规则见 docs/protocol/README.md (决策依据见 ADR 0008), 验收器 scripts/transcription/corpus.ts 的手写校验为本 schema 的物化子集。",
+  "description": "每个 .json 文件承载一条用例, 文件名须为 <id>.json。三条设计原则: 其一, fixture 声明式 (工作区树由字段描述, 不写脚本, 由验收器解释执行); 其二, env 白名单 (被测进程只拿最小环境白名单, 不继承宿主环境, case 只声明增量, 保可移植); 其三, expect 断言族按用例取舍 (退出码 / stdout 逐字节 / stdout 与 stderr 的子串含与禁含 / 文件系统终态, 正反两面俱全)。字符串字段内可用 $FIXTURE 引用 fixture 根 (realpath 形态的绝对路径)。套件级语义与维护规则见 docs/protocol/README.md (决策依据见 ADR 0008), 验收器 scripts/transcription/corpus.ts 的手写校验为本 schema 的物化子集。",
   "type": "object",
   "additionalProperties": false,
   "required": ["id", "specRefs", "fixture", "run", "expect"],
@@ -141,7 +141,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["exitCode"],
-      "description": "四件套断言: 退出码 / stdout 逐字节 / contains / 文件系统终态; 至少给 exitCode, 其余按用例取舍",
+      "description": "断言族: 退出码 / stdout 逐字节 / stdout 子串 (含与禁含) / stderr 子串 (含与禁含) / 文件系统终态; 至少给 exitCode, 其余按用例取舍",
       "properties": {
         "exitCode": { "type": "integer", "description": "期望退出码" },
         "stdoutExact": {
@@ -162,6 +162,11 @@
           "type": "array",
           "items": { "type": "string" },
           "description": "stderr 子串断言 (诊断与告警面)"
+        },
+        "stderrMustNotContain": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "stderr 禁含子串断言 (逐项独立判定; 「正确行为是静默」类用例的「不该出现」面: 多出一条告警的缺陷形态, 正向断言原理上抓不住)"
         },
         "fs": {
           "type": "array",

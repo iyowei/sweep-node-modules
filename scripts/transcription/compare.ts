@@ -1,8 +1,8 @@
 /**
  * 转写契约套件 · 比对层。
  *
- * 职责: 拿一条语料的 expect 面逐项量被测进程的实际结果 (退出码 / stdout 逐字节 / contains /
- * 禁含 / stderr / 文件系统终态), 产出失败清单。本层只判不修: 不触碰现场, 不改被测行为。
+ * 职责: 拿一条语料的 expect 面逐项量被测进程的实际结果 (退出码 / stdout 逐字节 /
+ * stdout 与 stderr 的子串含与禁含 / 文件系统终态), 产出失败清单。本层只判不修: 不触碰现场, 不改被测行为。
  */
 import { lstat, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -70,7 +70,7 @@ export async function checkFs(
  * 步骤 1：短路项检查
  *   timedOut / spawnError 均为假, 继续逐项比对
  *
- * 步骤 2：逐项 (退出码 → stdoutExact → contains → fs)
+ * 步骤 2：逐项 (退出码 → stdoutExact → 子串含与禁含 → fs)
  *   全部通过 → failures = []
  *
  * Output（数据契约）
@@ -146,6 +146,16 @@ export async function compareCase(
       failures.push({
         kind: 'stderrContains',
         message: `stderr 缺少子串: "${clip(wanted)}"`,
+      });
+    }
+  }
+
+  for (const needle of expect.stderrMustNotContain ?? []) {
+    const forbidden = applyVars(needle, root);
+    if (exec.stderr.includes(forbidden)) {
+      failures.push({
+        kind: 'stderrMustNotContain',
+        message: `stderr 出现了禁含子串: "${clip(forbidden)}"`,
       });
     }
   }
