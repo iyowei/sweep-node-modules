@@ -14,6 +14,22 @@
 
 ## 设计文档
 
-**工作区级清理工具设计**
-[sweep-node-modules 设计](designs/sweep-node-modules-design.md)
-命令面、配置规格、扫描与体积统计、删除安全闸、代码结构、测试策略与明确不做清单的全量设计。
+**设计总纲**
+[sweep-node-modules 设计总纲](designs/sweep-node-modules-design.md)
+定位与成功标准、代码结构与运行时基座、测试策略、明确不做清单; 各设计块分册的索引入口。
+
+**命令面与输出**
+[命令面与输出](designs/cli-surface.md)
+命令、旗标、退出码与清单渲染规格。
+
+**配置与初始化**
+[配置与初始化](designs/config-and-initialization.md)
+配置文件规格、roots / exclude 语义与初始化向导。
+
+**扫描与体积**
+[扫描与体积](designs/scan-and-size.md)
+目录遍历算法、剪枝与排除、体积统计与性能要点。
+
+**删除安全闸**
+[删除安全闸](designs/deletion-guard.md)
+删除目标的合法性校验与执行语义。

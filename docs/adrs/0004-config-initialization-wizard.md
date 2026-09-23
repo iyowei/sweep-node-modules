@@ -56,4 +56,4 @@
 **关联引用**
 
 - 判定模型见 [ADR 0002](0002-fixed-config-and-preview-execution.md); 本 ADR 只定义配置的生成与再编辑, 不触碰每次运行的删除判定链。
-- 全量设计见 [设计文档](../designs/sweep-node-modules-design.md)。
+- 全量设计 (总纲与分册) 见 [设计文档](../designs/sweep-node-modules-design.md)。

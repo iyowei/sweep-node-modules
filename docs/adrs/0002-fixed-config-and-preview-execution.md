@@ -48,5 +48,5 @@
 **关联引用**
 
 - 定位见 [ADR 0001](0001-workspace-level-cleaner.md)。
-- 删除安全闸 (只允许删「末段恰为 `node_modules` 且在根之下」的目录) 属实现级设计, 见 [设计文档](../designs/sweep-node-modules-design.md)。
+- 删除安全闸 (只允许删「末段恰为 `node_modules` 且在根之下」的目录) 属实现级设计, 见 [删除安全闸](../designs/deletion-guard.md)。
 - 配置的生成与再编辑 (`sweep-nm init` 向导) 属一次性设置, 不属每次运行的删除判定链, 见 [ADR 0004](0004-config-initialization-wizard.md)。
