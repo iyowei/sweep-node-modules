@@ -1,0 +1,23 @@
+{
+  "id": "scan-root-symlink-followed",
+  "specRefs": ["BC-11", "OF-03"],
+  "fixture": {
+    "projects": [{ "dir": "zone/real" }],
+    "symlinks": [{ "at": "link", "to": "zone/real" }]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/link\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/link\n  ▒ 8 KB  link    $FIXTURE/link\n  █ 合计 1 处 · 8 KB   加 --yes 执行删除\n"
+  }
+}

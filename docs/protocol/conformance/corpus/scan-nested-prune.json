@@ -1,0 +1,22 @@
+{
+  "id": "scan-nested-prune",
+  "specRefs": ["BC-01", "OF-03"],
+  "fixture": {
+    "projects": [{ "dir": "zone/a", "nested": true }]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/zone\n  ▒ 12 KB  a    $FIXTURE/zone/a\n  █ 合计 1 处 · 12 KB   加 --yes 执行删除\n"
+  }
+}

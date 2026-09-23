@@ -68,6 +68,7 @@ bun run lint       # oxlint
 bun run format     # prettier --write
 bun test           # bun test (243 条: 契约 / 鲁棒 / 压测 / 双载体 e2e / 伪终端冒烟)
 bun run bench      # 基准四组 (扫描 / 体积 / 真实工作区 / 压测)
+bun run conformance -- --target "bun src/cli.ts"  # 转写一致性验收 (40 条金样本, 见 docs/protocol/)
 ```
 
 运行时双跑验证: `bun src/cli.ts` 与 `node src/cli.ts` 均可直接运行。

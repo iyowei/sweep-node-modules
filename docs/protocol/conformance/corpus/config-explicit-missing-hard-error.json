@@ -1,0 +1,13 @@
+{
+  "id": "config-explicit-missing-hard-error",
+  "specRefs": ["BC-17", "BC-26"],
+  "fixture": {},
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/nope.json" }
+  },
+  "expect": {
+    "exitCode": 1,
+    "stdoutExact": "",
+    "stderrContains": ["配置不存在 ($FIXTURE/nope.json), 请检查路径"]
+  }
+}

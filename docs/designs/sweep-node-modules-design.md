@@ -55,6 +55,7 @@ src/
 bench/                  # 基准仪器 (扫描 / 体积 / 真实工作区 / 压测四组)
 bin/sweep-nm            # sh 启动器: 挑选运行时 (Bun 优先, Node 回退) 后 exec src/cli.ts
 bin/sweep-nm.cmd        # cmd 启动器 (Windows): 与 sh 启动器同逻辑
+scripts/transcription/  # 转写契约套件的验收器与变异生成器 (见 docs/protocol/)
 ```
 
 双运行时策略见 [ADR 0006](../adrs/0006-dual-runtime-bun-first.md); `src/runtime.ts` 导出面约定:
@@ -102,4 +103,5 @@ bin/sweep-nm.cmd        # cmd 启动器 (Windows): 与 sh 启动器同逻辑
 - [ADR 0005: 工程闸门与提交钩子](../adrs/0005-engineering-gates-and-hooks.md)
 - [ADR 0006: 双运行时支持与 Bun 优先的 API 策略](../adrs/0006-dual-runtime-bun-first.md)
 - [ADR 0007: 三平台可移植性与配置定位](../adrs/0007-platform-portability.md)
+- [ADR 0008: 转写契约套件](../adrs/0008-transcription-kit.md)
 - 工程闸门操作细节以仓库根 `lefthook.yml`、`.oxlintrc.json`、`.prettierrc` 为准; 文档体系与命名约定见 [docs/README](../README.md)。

@@ -1,0 +1,30 @@
+{
+  "id": "delete-partial-failure-shell",
+  "specRefs": ["BC-25", "BC-26", "EC-05"],
+  "fixture": {
+    "projects": [{ "dir": "zone/locked" }],
+    "readonly": ["zone/locked"]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "argv": ["--yes"],
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 1,
+    "stdoutContains": [
+      "✗ 8 KB  locked",
+      "EACCES: 权限不足, 拒绝删除",
+      "注意: 目录内容可能已被部分或全部删除, 请复查",
+      "汇总 成功 0 处 · 释放 0 B · 失败 1 处"
+    ],
+    "fs": [{ "path": "zone/locked/node_modules", "state": "exists" }]
+  }
+}

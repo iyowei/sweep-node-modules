@@ -1,0 +1,17 @@
+{
+  "id": "config-corrupt-shape-roots-missing",
+  "specRefs": ["BC-19", "BC-20"],
+  "fixture": {},
+  "setup": [
+    { "write": { "path": "config.json", "text": "{\n  \"exclude\": []\n}\n" } }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 1,
+    "stderrContains": [
+      "配置损坏 ($FIXTURE/config.json): roots 应为字符串数组 (实际: 缺失)"
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "render-empty-result",
+  "specRefs": ["OF-01", "OF-07", "BC-26"],
+  "fixture": {
+    "projects": []
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/zone\n  ░ 未发现 node_modules\n"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "id": "render-tier-mid-and-order",
+  "specRefs": ["BC-12", "OF-02", "OF-04", "OF-05"],
+  "fixture": {
+    "projects": [
+      { "dir": "zone/big", "files": 1, "bytesPerFile": 104857600 },
+      { "dir": "zone/small" }
+    ]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/zone\n  ▓ 100 MB  big      $FIXTURE/zone/big\n  ▒   8 KB  small    $FIXTURE/zone/small\n  █ 合计 2 处 · 100 MB   加 --yes 执行删除\n"
+  }
+}

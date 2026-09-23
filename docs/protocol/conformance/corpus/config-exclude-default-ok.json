@@ -1,0 +1,22 @@
+{
+  "id": "config-exclude-default-ok",
+  "specRefs": ["BC-20"],
+  "fixture": {
+    "projects": [{ "dir": "zone/a" }]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"]\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/zone\n  ▒ 8 KB  a    $FIXTURE/zone/a\n  █ 合计 1 处 · 8 KB   加 --yes 执行删除\n"
+  }
+}

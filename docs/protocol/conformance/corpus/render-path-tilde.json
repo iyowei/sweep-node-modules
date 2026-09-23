@@ -1,0 +1,22 @@
+{
+  "id": "render-path-tilde",
+  "specRefs": ["OF-01", "OF-03"],
+  "fixture": {
+    "projects": [{ "dir": "home/proj" }]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/home\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: ~\n  ▒ 8 KB  proj    ~/proj\n  █ 合计 1 处 · 8 KB   加 --yes 执行删除\n"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "cli-no-config-yes-hard-reject",
+  "specRefs": ["BC-28", "BC-26"],
+  "fixture": {
+    "projects": [{ "dir": "zone/a" }]
+  },
+  "run": { "argv": ["--yes"] },
+  "expect": {
+    "exitCode": 1,
+    "stdoutExact": "",
+    "stderrContains": [
+      "拒绝执行: 当前无配置文件, --yes 不可用",
+      "将扫的根: $FIXTURE",
+      "先 sweep-nm init 生成配置, 或用 --config 指定配置文件"
+    ],
+    "fs": [{ "path": "zone/a/node_modules", "state": "exists" }]
+  }
+}

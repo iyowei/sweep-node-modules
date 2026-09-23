@@ -1,0 +1,24 @@
+{
+  "id": "size-unmeasured-preview",
+  "specRefs": ["BC-14", "OF-02", "OF-11"],
+  "fixture": {
+    "projects": [{ "dir": "zone/ok" }, { "dir": "zone/locked" }],
+    "unreadable": ["zone/locked/node_modules"]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/zone\n  ▒ 8 KB  ok        $FIXTURE/zone/ok\n  ░    ?  locked    $FIXTURE/zone/locked  体积统计失败: 权限不足, 无法读取\n  █ 合计 2 处 · 8 KB   加 --yes 执行删除\n",
+    "fs": [{ "path": "zone/locked/node_modules", "state": "exists" }]
+  }
+}

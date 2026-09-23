@@ -1,0 +1,16 @@
+{
+  "id": "config-corrupt-json",
+  "specRefs": ["BC-19", "BC-26"],
+  "fixture": {},
+  "setup": [
+    { "write": { "path": "config.json", "text": "{ this is not valid json" } }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 1,
+    "stdoutExact": "",
+    "stderrContains": ["配置损坏 ($FIXTURE/config.json)", "JSON 解析失败"]
+  }
+}

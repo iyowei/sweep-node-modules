@@ -3,3 +3,4 @@ node_modules/
 *.log
 *.modified
 bench/results/
+scripts/transcription/mutants/gen-*/

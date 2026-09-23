@@ -1,0 +1,22 @@
+{
+  "id": "scan-order-target-asc",
+  "specRefs": ["BC-06", "OF-02"],
+  "fixture": {
+    "projects": [{ "dir": "zone/z" }, { "dir": "zone/a" }, { "dir": "zone/m" }]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/zone\n  ▒ 8 KB  a    $FIXTURE/zone/a\n  ▒ 8 KB  m    $FIXTURE/zone/m\n  ▒ 8 KB  z    $FIXTURE/zone/z\n  █ 合计 3 处 · 24 KB   加 --yes 执行删除\n"
+  }
+}

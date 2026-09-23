@@ -11,3 +11,4 @@
 | [0005](0005-engineering-gates-and-hooks.md)        | 工程闸门与提交钩子                 | 已接受 | 2026-09-23 |
 | [0006](0006-dual-runtime-bun-first.md)             | 双运行时支持与 Bun 优先的 API 策略 | 已接受 | 2026-09-23 |
 | [0007](0007-platform-portability.md)               | 三平台可移植性与配置定位           | 已接受 | 2026-09-23 |
+| [0008](0008-transcription-kit.md)                  | 转写契约套件                       | 已接受 | 2026-09-23 |

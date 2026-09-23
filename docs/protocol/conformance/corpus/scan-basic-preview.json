@@ -1,0 +1,35 @@
+{
+  "id": "scan-basic-preview",
+  "specRefs": [
+    "BC-01",
+    "BC-06",
+    "BC-23",
+    "OF-01",
+    "OF-02",
+    "OF-03",
+    "OF-08",
+    "OF-12"
+  ],
+  "fixture": {
+    "projects": [{ "dir": "zone/a" }, { "dir": "zone/b" }]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/zone\n  ▒ 8 KB  a    $FIXTURE/zone/a\n  ▒ 8 KB  b    $FIXTURE/zone/b\n  █ 合计 2 处 · 16 KB   加 --yes 执行删除\n",
+    "fs": [
+      { "path": "zone/a/node_modules", "state": "exists" },
+      { "path": "zone/b/node_modules", "state": "exists" }
+    ]
+  }
+}

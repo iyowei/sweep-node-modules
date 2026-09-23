@@ -1,0 +1,22 @@
+{
+  "id": "scan-root-is-file-warn",
+  "specRefs": ["BC-07", "OF-07"],
+  "fixture": {},
+  "setup": [
+    { "write": { "path": "zone/note.txt", "text": "not a directory" } },
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone/note.txt\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/zone/note.txt\n  ░ 未发现 node_modules\n",
+    "stderrContains": ["根不是目录, 已跳过: $FIXTURE/zone/note.txt"]
+  }
+}

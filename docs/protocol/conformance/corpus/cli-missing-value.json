@@ -1,0 +1,10 @@
+{
+  "id": "cli-missing-value",
+  "specRefs": ["BC-27"],
+  "fixture": {},
+  "run": { "argv": ["--exclude"] },
+  "expect": {
+    "exitCode": 1,
+    "stderrContains": ["参数错误: 参数 --exclude 缺少取值 (用 --help 查看用法)"]
+  }
+}

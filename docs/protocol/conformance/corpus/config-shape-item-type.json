@@ -1,0 +1,22 @@
+{
+  "id": "config-shape-item-type",
+  "specRefs": ["BC-19"],
+  "fixture": {},
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\", 123],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 1,
+    "stderrContains": [
+      "配置损坏 ($FIXTURE/config.json): roots 第 2 项应为字符串 (实际: number)"
+    ]
+  }
+}

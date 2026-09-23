@@ -1,0 +1,26 @@
+{
+  "id": "scan-root-eacces-warn",
+  "specRefs": ["BC-07", "OF-07"],
+  "fixture": {
+    "projects": [{ "dir": "zone/locked/inner" }],
+    "unreadable": ["zone/locked"]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone/locked/inner\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/zone/locked/inner\n  ░ 未发现 node_modules\n",
+    "stderrContains": [
+      "根不可读 (权限不足), 已跳过: $FIXTURE/zone/locked/inner"
+    ]
+  }
+}

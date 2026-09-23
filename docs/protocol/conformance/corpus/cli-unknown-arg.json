@@ -1,0 +1,11 @@
+{
+  "id": "cli-unknown-arg",
+  "specRefs": ["BC-27", "OF-12"],
+  "fixture": {},
+  "run": { "argv": ["--nope"] },
+  "expect": {
+    "exitCode": 1,
+    "stdoutExact": "",
+    "stderrContains": ["参数错误: 未知参数: --nope (用 --help 查看用法)"]
+  }
+}

@@ -13,7 +13,8 @@
     "lint:fix": "oxlint --fix",
     "format": "prettier --write .",
     "test": "bun test",
-    "bench": "bun bench/run.ts"
+    "bench": "bun bench/run.ts",
+    "conformance": "bun scripts/transcription/run-conformance.ts"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "6.0.2",

@@ -1,0 +1,10 @@
+{
+  "id": "cli-extra-positional",
+  "specRefs": ["BC-27"],
+  "fixture": {},
+  "run": { "argv": ["foo"] },
+  "expect": {
+    "exitCode": 1,
+    "stderrContains": ["参数错误: 未知参数: foo (用 --help 查看用法)"]
+  }
+}

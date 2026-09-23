@@ -1,0 +1,13 @@
+{
+  "id": "cli-init-non-tty",
+  "specRefs": ["BC-29"],
+  "fixture": {},
+  "run": { "argv": ["init"] },
+  "expect": {
+    "exitCode": 1,
+    "stdoutExact": "",
+    "stderrContains": [
+      "init 需要交互终端 (请在终端直接运行, 不要重定向或经管道)"
+    ]
+  }
+}

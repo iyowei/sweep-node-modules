@@ -1,0 +1,16 @@
+{
+  "id": "cli-no-config-non-tty-cwd-fallback",
+  "specRefs": ["BC-18", "BC-23", "BC-26"],
+  "fixture": {
+    "projects": [{ "dir": "zone/a" }]
+  },
+  "run": {},
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE\n  ▒ 8 KB  a    $FIXTURE/zone/a\n  █ 合计 1 处 · 8 KB   加 --yes 执行删除\n",
+    "stderrContains": [
+      "未找到配置文件, 本次以当前目录为根: $FIXTURE (想固定此设置, 运行 sweep-nm init)"
+    ],
+    "fs": [{ "path": "zone/a/node_modules", "state": "exists" }]
+  }
+}

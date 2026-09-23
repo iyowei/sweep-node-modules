@@ -1,0 +1,22 @@
+{
+  "id": "render-align-cjk",
+  "specRefs": ["OF-03", "OF-06"],
+  "fixture": {
+    "projects": [{ "dir": "zone/我的项目" }, { "dir": "zone/短" }]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/zone\n  ▒ 8 KB  我的项目    $FIXTURE/zone/我的项目\n  ▒ 8 KB  短          $FIXTURE/zone/短\n  █ 合计 2 处 · 16 KB   加 --yes 执行删除\n"
+  }
+}

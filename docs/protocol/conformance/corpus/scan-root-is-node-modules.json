@@ -1,0 +1,22 @@
+{
+  "id": "scan-root-is-node-modules",
+  "specRefs": ["BC-10", "OF-07"],
+  "fixture": {
+    "projects": [{ "dir": "." }]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/node_modules\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/node_modules\n  ░ 未发现 node_modules\n"
+  }
+}

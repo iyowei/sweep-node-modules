@@ -1,0 +1,28 @@
+{
+  "id": "scan-exclude-cli-merge",
+  "specRefs": ["BC-03", "OF-03"],
+  "fixture": {
+    "projects": [
+      { "dir": "zone/alpha" },
+      { "dir": "zone/beta" },
+      { "dir": "zone/gamma" }
+    ]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"exclude\": [\"alpha\"]\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "argv": ["--exclude", "beta"],
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/zone\n  ▒ 8 KB  gamma    $FIXTURE/zone/gamma\n  █ 合计 1 处 · 8 KB   加 --yes 执行删除\n",
+    "stdoutMustNotContain": ["alpha", "beta"]
+  }
+}

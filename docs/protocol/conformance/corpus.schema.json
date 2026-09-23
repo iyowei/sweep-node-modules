@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "corpus.schema.json",
+  "title": "转写契约套件 · 金样本语料 (conformance corpus case)",
+  "description": "每个 .json 文件承载一条用例, 文件名须为 <id>.json。三条设计原则: 其一, fixture 声明式 (工作区树由字段描述, 不写脚本, 由验收器解释执行); 其二, env 白名单 (被测进程只拿最小环境白名单, 不继承宿主环境, case 只声明增量, 保可移植); 其三, expect 四件套 (exitCode / stdoutExact / contains / fs)。字符串字段内可用 $FIXTURE 引用 fixture 根 (realpath 形态的绝对路径)。套件级语义与维护规则见 docs/protocol/README.md (决策依据见 ADR 0008), 验收器 scripts/transcription/corpus.ts 的手写校验为本 schema 的物化子集。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "specRefs", "fixture", "run", "expect"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "用例标识 (kebab-case, 全部小写); 须与文件名 <id>.json 一致"
+    },
+    "specRefs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[A-Z]{2,4}-[0-9]+$" },
+      "description": "背书的契约条款编号 (BC-* 行为契约 / OF-* 输出规格 / EC-* 边界表); 可追溯性硬要求: 每条期望必须能由条款原文辩护, 严禁「跑一遍记下来」式捕获"
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "声明式工作区树 (与 src/fixtures.ts 同构); 全部路径均为相对 fixture 根的相对路径",
+      "properties": {
+        "projects": {
+          "type": "array",
+          "description": "项目目录清单; 每项在其 dir 下生成 node_modules (含 files 个 bytesPerFile 字节的散文件)",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["dir"],
+            "properties": {
+              "dir": {
+                "type": "string",
+                "description": "项目目录 (相对根); 「.」表示根本身"
+              },
+              "files": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 2,
+                "description": "node_modules 内散文件数 (默认 2)"
+              },
+              "bytesPerFile": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 256,
+                "description": "每个散文件字节数 (默认 256)"
+              },
+              "nested": {
+                "type": "boolean",
+                "default": false,
+                "description": "true 时在 node_modules 内再嵌一层 node_modules (dep/node_modules/inner.js), 供剪枝用例"
+              },
+              "git": {
+                "type": "boolean",
+                "default": false,
+                "description": "true 时生成 .git 目录并在其中埋诱饵 node_modules (.git/x/node_modules/bait.js), 供跳过 .git 的用例"
+              }
+            }
+          }
+        },
+        "symlinks": {
+          "type": "array",
+          "description": "目录符号链接: at -> to (均为相对根的路径; 链接目标为绝对路径)",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["at", "to"],
+            "properties": {
+              "at": { "type": "string" },
+              "to": { "type": "string" }
+            }
+          }
+        },
+        "unreadable": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "不可读目录清单 (建空目录后 chmod 000), 供「目录不可读, 告警跳过」类用例"
+        },
+        "readonly": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "只读目录清单 (chmod 0500: 可读可进入、不可写): 内容可扫描与测体积, 但删除其条目会 EACCES, 供「删除失败 / 部分删除」类用例"
+        }
+      }
+    },
+    "setup": {
+      "type": "array",
+      "default": [],
+      "description": "预置态 (配置文件 / 诱饵文件等), 在 fixture 建树之后按序应用; 字符串内可用 $FIXTURE",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["write"],
+        "properties": {
+          "write": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "text"],
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "目标文件路径 (相对 fixture 根; 父目录不存在时自动创建)"
+              },
+              "text": {
+                "type": "string",
+                "description": "文件内容 (原样写入, 不做换行归一)"
+              }
+            }
+          }
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "执行声明: 被测命令由验收器的 --target 提供, 本对象只声明本次用例的增量",
+      "properties": {
+        "argv": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "追加在被测命令之后的参数 (逐项做 $FIXTURE 替换)"
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "default": {},
+          "description": "在最小环境白名单之上叠加的环境变量 (值内可用 $FIXTURE); 仅字符串值, 无 null 删除语义"
+        },
+        "cwd": {
+          "type": "string",
+          "default": ".",
+          "description": "工作目录 (相对 fixture 根的相对路径)"
+        }
+      }
+    },
+    "expect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exitCode"],
+      "description": "四件套断言: 退出码 / stdout 逐字节 / contains / 文件系统终态; 至少给 exitCode, 其余按用例取舍",
+      "properties": {
+        "exitCode": { "type": "integer", "description": "期望退出码" },
+        "stdoutExact": {
+          "type": "string",
+          "description": "stdout 逐字节期望 (非 TTY 路径 100% 确定, 是首选断言面); 与 stdoutContains 并存时两者都判"
+        },
+        "stdoutContains": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "stdout 子串断言 (逐项独立判定)"
+        },
+        "stdoutMustNotContain": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "stdout 禁含子串断言 (逐项独立判定; 剪枝 / 排除 / 诱饵类用例的「不该出现」面)"
+        },
+        "stderrContains": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "stderr 子串断言 (诊断与告警面)"
+        },
+        "fs": {
+          "type": "array",
+          "description": "文件系统终态断言 (相对 fixture 根的路径)",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "state"],
+            "properties": {
+              "path": { "type": "string" },
+              "state": {
+                "enum": ["gone", "exists", "empty"],
+                "description": "gone = 不存在; exists = 存在 (文件或目录, lstat 语义); empty = 存在且为空目录"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

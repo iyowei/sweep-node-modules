@@ -1,0 +1,24 @@
+{
+  "id": "delete-execute-ok",
+  "specRefs": ["BC-23", "BC-24", "BC-26", "OF-03", "OF-09"],
+  "fixture": {
+    "projects": [{ "dir": "zone/a" }]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "argv": ["--yes"],
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  执行 · 1 个根: $FIXTURE/zone\n  ✓ 8 KB  a    $FIXTURE/zone/a\n  █ 汇总 成功 1 处 · 释放 8 KB · 失败 0 处\n",
+    "fs": [{ "path": "zone/a/node_modules", "state": "gone" }]
+  }
+}

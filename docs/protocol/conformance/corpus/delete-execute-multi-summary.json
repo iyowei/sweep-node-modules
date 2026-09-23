@@ -1,0 +1,30 @@
+{
+  "id": "delete-execute-multi-summary",
+  "specRefs": ["BC-24", "BC-26", "OF-09"],
+  "fixture": {
+    "projects": [{ "dir": "zone/a" }, { "dir": "zone/m" }, { "dir": "zone/z" }]
+  },
+  "setup": [
+    { "write": { "path": "zone/a/keep.txt", "text": "keep" } },
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "argv": ["--yes"],
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  执行 · 1 个根: $FIXTURE/zone\n  ✓ 8 KB  a    $FIXTURE/zone/a\n  ✓ 8 KB  m    $FIXTURE/zone/m\n  ✓ 8 KB  z    $FIXTURE/zone/z\n  █ 汇总 成功 3 处 · 释放 24 KB · 失败 0 处\n",
+    "fs": [
+      { "path": "zone/a/node_modules", "state": "gone" },
+      { "path": "zone/m/node_modules", "state": "gone" },
+      { "path": "zone/z/node_modules", "state": "gone" },
+      { "path": "zone/a/keep.txt", "state": "exists" }
+    ]
+  }
+}

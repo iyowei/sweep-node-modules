@@ -1,0 +1,23 @@
+{
+  "id": "scan-root-missing-warn",
+  "specRefs": ["BC-07", "OF-12"],
+  "fixture": {
+    "projects": [{ "dir": "zone/a" }]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\", \"$FIXTURE/ghost\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 2 个根: $FIXTURE/zone · $FIXTURE/ghost\n  ▒ 8 KB  a    $FIXTURE/zone/a\n  █ 合计 1 处 · 8 KB   加 --yes 执行删除\n",
+    "stderrContains": ["根不存在, 已跳过: $FIXTURE/ghost"]
+  }
+}

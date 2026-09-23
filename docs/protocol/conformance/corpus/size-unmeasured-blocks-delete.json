@@ -1,0 +1,28 @@
+{
+  "id": "size-unmeasured-blocks-delete",
+  "specRefs": ["BC-15", "BC-26", "OF-09", "OF-11"],
+  "fixture": {
+    "projects": [{ "dir": "zone/ok" }, { "dir": "zone/locked" }],
+    "unreadable": ["zone/locked/node_modules"]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "argv": ["--yes"],
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json" }
+  },
+  "expect": {
+    "exitCode": 1,
+    "stdoutExact": "▍ SWEEP-NM  执行 · 1 个根: $FIXTURE/zone\n  ✓ 8 KB  ok        $FIXTURE/zone/ok\n  ✗    ?  locked    $FIXTURE/zone/locked  体积统计失败: 权限不足, 无法读取\n  █ 汇总 成功 1 处 · 释放 8 KB · 失败 1 处\n",
+    "fs": [
+      { "path": "zone/ok/node_modules", "state": "gone" },
+      { "path": "zone/locked/node_modules", "state": "exists" }
+    ]
+  }
+}

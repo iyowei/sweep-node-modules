@@ -1,0 +1,22 @@
+{
+  "id": "render-no-color-degraded",
+  "specRefs": ["OF-10"],
+  "fixture": {
+    "projects": [{ "dir": "zone/a" }]
+  },
+  "setup": [
+    {
+      "write": {
+        "path": "config.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE/zone\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/config.json", "NO_COLOR": "1" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/zone\n  ▒ 8 KB  a    $FIXTURE/zone/a\n  █ 合计 1 处 · 8 KB   加 --yes 执行删除\n"
+  }
+}
