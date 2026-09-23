@@ -46,20 +46,20 @@
 
 ## OF · 输出规格 (字节级, 非 TTY)
 
-| 编号  | 条款                                                                                        | 权威出处                                                            | 可验收                       |
-| ----- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------- |
-| OF-01 | 顶栏 `▍ SWEEP-NM  预览 · N 个根`; 根数 ≤3 时列出根路径 (`·` 连接), 超过只报数量             | cli-surface.md「输出规格」                                          | ✓                            |
-| OF-02 | 清单按体积降序 (体积测不到的排末尾), 同体积保持输入序                                       | cli-surface.md; render.ts                                           | ✓                            |
-| OF-03 | 行结构: 档位块 + 右对齐体积 + 项目名 + 路径; 路径剥尾部 `/node_modules`, 家目录前缀缩写 `~` | cli-surface.md「输出规格」                                          | ✓                            |
-| OF-04 | 档位: 大 ≥ 1 GiB (█) / 中 ≥ 100 MiB (▓) / 小 < 100 MiB (▒)                                  | render.ts 常量 (待真实分布重标)                                     | ✓ (小 / 中两档)              |
-| OF-05 | 体积格式: 逐级 1024 (B / KB / MB / GB / TB), 1 位小数, 整数省小数尾                         | render.ts formatBytes                                               | ✓                            |
-| OF-06 | 对齐按终端显示列宽 (CJK 双宽), 不按 code unit                                               | cli-surface.md「输出规格」                                          | ✓                            |
-| OF-07 | 空结果: 中性块提示「未发现 node_modules」, 退 0                                             | cli-surface.md                                                      | ✓                            |
-| OF-08 | 预览末行: `合计 N 处 · 总量` + `加 --yes 执行删除` 提示                                     | cli-surface.md                                                      | ✓                            |
-| OF-09 | 执行模式: 逐行 ✓ / ✗ (失败带原因), 末行 `汇总 成功 N 处 · 释放 X · 失败 M 处`               | cli-surface.md「输出规格」                                          | ✓                            |
-| OF-10 | 非 TTY / `NO_COLOR` → 零 ANSI 纯文本, 信息与结构不丢失                                      | cli-surface.md「降级」; ADR 0007                                    | ✓ (非 TTY 面)                |
-| OF-11 | 占位行: 体积列 `?` + 中性块 + note 原因 (仅预览; 执行模式按失败呈现)                        | cli.ts toEntries; render.ts                                         | ✓                            |
-| OF-12 | 清单与名单回执走 stdout; 告警 (含名单未匹配) / 错误走 stderr, 不污染清单                    | cli.ts print / warn / notice / collectNameNotes; render.ts「notes」 | ✓ (非 TTY 面; 回执 TTY 专属) |
+| 编号  | 条款                                                                                                        | 权威出处                                                            | 可验收                       |
+| ----- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------- |
+| OF-01 | 顶栏 `▍ SWEEP-NM  预览 · N 个根`; 根数 ≤3 时列出根路径 (`·` 连接), 超过只报数量                             | cli-surface.md「输出规格」                                          | ✓                            |
+| OF-02 | 清单按体积降序 (体积测不到的排末尾), 同体积保持输入序                                                       | cli-surface.md; render.ts                                           | ✓                            |
+| OF-03 | 行结构: 档位块 + 右对齐体积 + 项目名 + 路径; 路径剥尾部 `/node_modules`, 家目录前缀缩写 `~`                 | cli-surface.md「输出规格」                                          | ✓                            |
+| OF-04 | 档位: 大 ≥ 1 GiB (█) / 中 ≥ 100 MiB (▓) / 小 < 100 MiB (▒)                                                  | render.ts 常量 (待真实分布重标)                                     | ✓ (小 / 中两档)              |
+| OF-05 | 体积格式: 逐级 1024 (B / KB / MB / GB / TB), 1 位小数, 整数省小数尾                                         | render.ts formatBytes                                               | ✓                            |
+| OF-06 | 对齐按终端显示列宽 (CJK 双宽), 不按 code unit                                                               | cli-surface.md「输出规格」                                          | ✓                            |
+| OF-07 | 空结果: 中性块提示「未发现 node_modules」, 退 0                                                             | cli-surface.md                                                      | ✓                            |
+| OF-08 | 预览末行: `合计 N 处 · 总量` + `加 --yes 执行删除` 提示                                                     | cli-surface.md                                                      | ✓                            |
+| OF-09 | 执行模式: 逐行 ✓ / ✗ (失败带原因), 末行 `汇总 成功 N 处 · 释放 X · 失败 M 处`                               | cli-surface.md「输出规格」                                          | ✓                            |
+| OF-10 | 非 TTY / `NO_COLOR` → 零 ANSI 纯文本, 着色与行结构不丢失 (运行时自述与名单回执按设计仅真终端出现, 不在此列) | cli-surface.md「降级」; ADR 0007                                    | ✓ (非 TTY 面)                |
+| OF-11 | 占位行: 体积列 `?` + 中性块 + note 原因 (仅预览; 执行模式按失败呈现)                                        | cli.ts toEntries; render.ts                                         | ✓                            |
+| OF-12 | 清单与名单回执走 stdout; 告警 (含名单未匹配) / 错误走 stderr, 不污染清单                                    | cli.ts print / warn / notice / collectNameNotes; render.ts「notes」 | ✓ (非 TTY 面; 回执 TTY 专属) |
 
 > **TTY 专属输出面 (不编条款号)**: 顶栏尾部的运行时自述 (` · bun 1.4.2`) 与顶栏下方的名单回执 (`░ 排除生效: alpha (1 处)` / `░ 包含命中: <name> (<n> 处)`) 仅在 stdout 为真终端时出现, 非 TTY 下整段省略 (判据见 `cli.ts` 的 `process.stdout.isTTY`; 回执由 `collectNameNotes` 产出, 经 `render.ts` 的 `notes` 落在清单之前)。二者不参与条款编号, 也不进语料断言: 黑盒验收器走管道, 原理上拿不到 TTY 面; 登记与豁免理由见 `conformance/coverage.md`「未覆盖条款」。
 
