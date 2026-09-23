@@ -7,6 +7,9 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { type Interface, createInterface } from 'node:readline/promises';
 
+import { type Config } from './config.ts';
+import { shortenHome } from './render.ts';
+
 /** 交互 IO: ask 返回 null 表示取消 (Ctrl+C / EOF) */
 export interface InitIO {
   /** 提问并等待一行答案; 返回 null 即取消 */
@@ -28,8 +31,8 @@ export interface InitDeps {
 
 export interface InitResult {
   state: 'written' | 'cancelled' | 'declined-overwrite';
-  /** 仅 state 为 written 时存在: 实际落盘的配置 */
-  config?: { roots: string[]; exclude: string[] };
+  /** 仅 state 为 written 时存在: 实际落盘的配置 (复用 Config 而非重述形状, 加字段时不会漏改) */
+  config?: Config;
 }
 
 /** 空白判定: 正则 \s 已覆盖全角空格 (\u3000) 等 Unicode 空白 */
@@ -140,17 +143,19 @@ export async function runInit(deps: InitDeps): Promise<InitResult> {
 
   io.print('首次使用, 先确定扫描范围');
 
-  const cwd = process.cwd();
+  // 默认取家目录而非 cwd: 本工具是工作区级清理, 用户从哪个目录唤起与要扫的范围
+  // 无关 (cwd 常是某个项目内部, 作默认值无意义); 非 TTY 静默回退仍按 cwd, 见 cli.ts
+  const home = homedir();
   let roots: string[] = [];
 
   // 存在性校验挡在落盘前: 坏根提示后重问, 不让无效路径进配置
   for (;;) {
     const rootsAnswer = await io.ask(
       '扫描根 (逗号或空白分隔多个)',
-      `默认: ${cwd}`,
+      `默认: ${home}`,
     );
     if (rootsAnswer === null) return cancelled();
-    roots = parseList(rootsAnswer, [cwd]);
+    roots = parseList(rootsAnswer, [home]);
 
     const missing: string[] = [];
     for (const root of roots) {
@@ -169,9 +174,15 @@ export async function runInit(deps: InitDeps): Promise<InitResult> {
   );
   if (!(await io.confirm('确认写入?', true))) return cancelled();
 
-  const config = { roots, exclude };
-  await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`);
-  io.print(`配置已写入: ${configPath}`);
+  // include 显式落空数组: 向导不问白名单, 但字段在场让配置文件自文档化 (缺省虽等价, 却看不出有此能力)
+  const config = { roots, exclude, include: [] };
+  const text = `${JSON.stringify(config, null, 2)}\n`;
+  await writeFile(configPath, text);
+  // 路径行缩写家目录便于辨认; 正文回显落盘原文 (与文件逐字一致, 便于对照与复制)
+  io.print(`配置已写入: ${shortenHome(configPath, homedir())}`);
+  io.print('');
+  io.print(text.trimEnd());
+  io.print('');
   return { state: 'written', config };
 }
 

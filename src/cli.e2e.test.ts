@@ -432,12 +432,14 @@ function defineExecuteCases(runner: string, available: boolean): void {
       async () => {
         const workspace = await make({ projects: [{ dir: 'alpha' }] });
         const home = emptyHome(workspace);
+        // 向导默认根是家目录, 故在家目录下备一处 node_modules, 让默认根能扫出结果
+        mkdirSync(join(home, 'beta', 'node_modules'), { recursive: true });
 
         const { output, status } = await runPty(
           runner,
           ['--yes'],
           [
-            { prompt: '扫描根', input: '\n' }, // 取默认根 (CLI 的 cwd 即工作区根)
+            { prompt: '扫描根', input: '\n' }, // 取默认根 (家目录)
             { prompt: '排除名单', input: '\n' },
             { prompt: '确认写入', input: 'y\n' },
           ],

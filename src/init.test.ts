@@ -79,17 +79,22 @@ describe('runInit: written 路径', () => {
 
     const result = await runInit(deps);
 
-    const expected = { roots: [process.cwd()], exclude: [] };
+    const expected = { roots: [homedir()], exclude: [], include: [] };
     expect(result).toEqual({ state: 'written', config: expected });
     expect(writes).toHaveLength(1);
     expect(writes[0]!.path).toBe(CONFIG_PATH);
     expect(writes[0]!.text).toBe(`${JSON.stringify(expected, null, 2)}\n`);
-    expect(askCalls[0]!.hint).toContain(process.cwd());
+    expect(askCalls[0]!.hint).toContain(homedir());
     // 开场一句, 回显解析结果在确认前可见, 收尾落盘回执
     expect(prints[0]).toBe('首次使用, 先确定扫描范围');
     expect(prints).toContain(
-      `将写入 roots: ${JSON.stringify([process.cwd()])} · exclude: []`,
+      `将写入 roots: ${JSON.stringify([homedir()])} · exclude: []`,
     );
+    // 落盘回执: 路径行做家目录缩写, 随后回显与落盘文件逐字一致的 JSON 原文
+    expect(prints).toContain(
+      '配置已写入: ~/.config/sweep-node-modules/config.json',
+    );
+    expect(prints).toContain(JSON.stringify(expected, null, 2));
     // 写入确认为最后一问且默认 Y
     expect(confirmCalls).toHaveLength(1);
     expect(confirmCalls[0]!.defaultYes).toBe(true);
@@ -105,7 +110,11 @@ describe('runInit: written 路径', () => {
 
     expect(result).toEqual({
       state: 'written',
-      config: { roots: ['/a', '/b', '/c'], exclude: ['dist', 'coverage'] },
+      config: {
+        roots: ['/a', '/b', '/c'],
+        exclude: ['dist', 'coverage'],
+        include: [],
+      },
     });
     expect(writes).toHaveLength(1);
     expect(prints).toContain(
@@ -141,7 +150,7 @@ describe('runInit: written 路径', () => {
 
     expect(result).toEqual({
       state: 'written',
-      config: { roots: ['/ok'], exclude: [] },
+      config: { roots: ['/ok'], exclude: [], include: [] },
     });
     expect(prints).toContain('根不存在: /missing-a');
     expect(prints).toContain('根不存在: /missing-b');

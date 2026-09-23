@@ -246,6 +246,14 @@ function shortenPath(path: string, style: PathStyle, home?: string): string {
 }
 
 /**
+ * 家目录缩写 (平台原生风味): 与清单渲染内部同源, 导出供向导等复用。
+ * home 缺省时不缩写 (保持纯函数, 不读环境)。
+ */
+export function shortenHome(path: string, home?: string): string {
+  return shortenPath(path, PLATFORM_STYLE, home);
+}
+
+/**
  * 展示路径: 先剥掉尾部 node_modules (每行恒定的后缀, 与左侧项目名重复, 属噪声;
  * 示意里展示的是项目目录), 再做家目录缩写。后缀与前缀均按风味分隔符拼装。
  */

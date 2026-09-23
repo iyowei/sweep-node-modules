@@ -81,7 +81,7 @@ async function runWorker(name: string, configPath: string): Promise<void> {
     });
 
     if (name === 'written') {
-      const expected = { roots, exclude: ['dist'] };
+      const expected = { roots, exclude: ['dist'], include: [] };
       check(
         result.state === 'written',
         `written: state 为 written (实际 ${result.state})`,
