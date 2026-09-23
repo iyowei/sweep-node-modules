@@ -1,0 +1,7 @@
+[1;7m▍ SWEEP-NM  预览 · 1 个根: ~/rongmai/development[0m
+  [31m█[0m 4.6 GB  [1mhdapp      [0m    [2m~/rongmai/development/hdapp[0m
+  [33m▓[0m 620 MB  [1mneuralfin  [0m    [2m~/rongmai/development/neuralfin[0m
+  [36m▒[0m  86 MB  [1mxueyan     [0m    [2m~/rongmai/development/xueyan[0m
+  [36m▒[0m  12 MB  [1m学习笔记   [0m    [2m~/笔记/学习笔记[0m
+  [36m▒[0m  12 MB  [1mesc[31mname[0m    [2m~/笔记/esc[31mname[0m  [2m名字已净化显示[0m
+  [7m█[0m [1m合计 5 处 · 5.3 GB[0m   [2m加[0m [1m--yes[0m [2m执行删除[0m

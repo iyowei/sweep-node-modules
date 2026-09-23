@@ -1,0 +1,6 @@
+▍ SWEEP-NM  执行 · 1 个根: ~/rongmai/development
+  ✓ 4.6 GB  hdapp        ~/rongmai/development/hdapp
+  ✗ 620 MB  neuralfin    ~/rongmai/development/neuralfin  EACCES: permission denied
+  ✓  86 MB  xueyan       ~/rongmai/development/xueyan
+  ✓  12 MB  学习笔记     ~/笔记/学习笔记
+  █ 汇总 成功 3 处 · 释放 4.6 GB · 失败 1 处

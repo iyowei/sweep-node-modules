@@ -8,15 +8,16 @@
 
 ## 修订记录
 
-| 日期       | 修订                                                                                                                                           |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-09-23 | 初稿: 立项设计, 含命令面、配置规格、扫描与安全闸、代码结构、测试策略、明确不做清单                                                             |
-| 2026-09-23 | 补记: 配置初始化模型 (`sweep-nm init` 子命令 + 首次自动向导), 见 [ADR 0004](../adrs/0004-config-initialization-wizard.md)                      |
-| 2026-09-23 | 补记: 工程闸门 (oxlint / prettier / lefthook), 见 [ADR 0005](../adrs/0005-engineering-gates-and-hooks.md)                                      |
-| 2026-09-23 | 补记: 双运行时 (Bun 优先 / Node 回退) 与性能要点, 见 [ADR 0006](../adrs/0006-dual-runtime-bun-first.md)                                        |
-| 2026-09-23 | 拆分: 单篇设计拆为总纲 + 四份分册; 分册后续修订各自在文件内补「修订记录」                                                                      |
-| 2026-09-23 | 分册索引收为指针行; 设计索引权威归 [designs/README.md](README.md) (含推荐阅读顺序)                                                             |
-| 2026-09-23 | 补记: 三平台 (Windows / macOS / Linux) 可移植性与配置定位, 见 [ADR 0007](../adrs/0007-platform-portability.md); CLI 输出规格升级为色块视觉规范 |
+| 日期       | 修订                                                                                                                                            |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-23 | 初稿: 立项设计, 含命令面、配置规格、扫描与安全闸、代码结构、测试策略、明确不做清单                                                              |
+| 2026-09-23 | 补记: 配置初始化模型 (`sweep-nm init` 子命令 + 首次自动向导), 见 [ADR 0004](../adrs/0004-config-initialization-wizard.md)                       |
+| 2026-09-23 | 补记: 工程闸门 (oxlint / prettier / lefthook), 见 [ADR 0005](../adrs/0005-engineering-gates-and-hooks.md)                                       |
+| 2026-09-23 | 补记: 双运行时 (Bun 优先 / Node 回退) 与性能要点, 见 [ADR 0006](../adrs/0006-dual-runtime-bun-first.md)                                         |
+| 2026-09-23 | 拆分: 单篇设计拆为总纲 + 四份分册; 分册后续修订各自在文件内补「修订记录」                                                                       |
+| 2026-09-23 | 分册索引收为指针行; 设计索引权威归 [designs/README.md](README.md) (含推荐阅读顺序)                                                              |
+| 2026-09-23 | 补记: 三平台 (Windows / macOS / Linux) 可移植性与配置定位, 见 [ADR 0007](../adrs/0007-platform-portability.md); CLI 输出规格升级为色块视觉规范  |
+| 2026-09-23 | 实现落地回写: 模块表补 delete / 门面 / bench / scripts; 测试策略补实现覆盖指针; 关联 [ADR 0008](../adrs/0008-transcription-kit.md) 转写契约套件 |
 
 ## 分册索引
 
@@ -38,23 +39,28 @@
 
 ```text
 src/
-├── cli.ts      # 入口: 参数解析、流程编排、帮助 (分册: 命令面与输出)
+├── cli.ts      # 入口编排: 参数 / 配置分流 / 扫描 / 体积 / 渲染 / 安全闸 / 删除 (分册: 命令面与输出)
 ├── runtime.ts  # 运行时适配: Bun 优先 / Node 回退 (spawn 与文件读写)
 ├── config.ts   # 配置读取与合并 (分册: 配置与初始化)
 ├── init.ts     # 初始化向导: 交互 IO 与配置生成纯逻辑分离 (分册: 配置与初始化)
-├── scan.ts     # 纯函数: 递归扫描 (分册: 扫描与体积)
-├── size.ts     # 体积统计与解析 (分册: 扫描与体积)
-├── guard.ts    # 安全闸: 删除目标合法性校验 (分册: 删除安全闸)
-└── *.test.ts   # 与模块同名并置的单测
+├── scan.ts     # 扫描门面: 对外只暴露胜出候选 (候选: scan-parallel / scan-prune / scan-native)
+├── size.ts     # 体积门面: 策略 A 双轨选择 (du 快路径 / 纯实现基线)
+├── guard.ts    # 安全闸: 校验不变量 (分册: 删除安全闸)
+├── delete.ts   # 删除执行: 组件级复核 / 三桶结果 / 整批中止 (分册: 删除安全闸)
+├── render.ts   # 清单渲染: 色块视觉规范与降级 (分册: 命令面与输出)
+├── types.ts / fixtures.ts / golden.ts / render.fixtures.ts  # 基建: 候选共享接口 / 合成工作区 / 金样板断言 / 渲染共享样例
+├── init.smoke.ts / runtime.node-smoke.ts  # 双载体冒烟入口: 向导真实管道 / Node 直跑 (由对应 *.test.ts spawn 驱动)
+└── *.test.ts   # 与模块同名并置或按维度命名的单测 (contract / robustness / stress / e2e / smoke)
 
-bin/
-└── sweep-nm    # sh 启动器: 挑选运行时 (Bun 优先, Node 回退) 后 exec src/cli.ts
+bench/                  # 基准仪器 (扫描 / 体积 / 真实工作区 / 压测四组)
+bin/sweep-nm            # sh 启动器: 挑选运行时 (Bun 优先, Node 回退) 后 exec src/cli.ts
+bin/sweep-nm.cmd        # cmd 启动器 (Windows): 与 sh 启动器同逻辑
 ```
 
 双运行时策略见 [ADR 0006](../adrs/0006-dual-runtime-bun-first.md); `src/runtime.ts` 导出面约定:
 
 - `isBun`: 运行时探测 (功能检测 `typeof Bun !== 'undefined'`: 有 Bun 走 Bun 实现, 无则回退 Node);
-- `spawnCapture(cmd, args)`: 子进程执行并捕获 stdout (Bun 走 `Bun.spawn`, Node 走 `node:child_process`);
+- `spawnCapture(cmd, args)`: 子进程执行并捕获 stdout (Bun 走 `Bun.spawn`, Node 走 `node:child_process`; stderr 直通不捕获);
 - `readTextFile(path)` / `writeTextFile(path, text)`: 文本读写 (Bun 走 `Bun.file` / `Bun.write`, Node 走 `node:fs/promises`);
 - 其余能力 (目录遍历、删除等) 一律直接走 `node:` 兼容 API, 不设分支。
 
@@ -72,7 +78,9 @@ bin/
 | 失败路径 | 删除安全闸   | 注入不可删目标, 退出码非零且汇总呈现                                                   |
 | 初始化   | 配置与初始化 | 非 TTY + 无配置走 cwd 回退不阻塞; 配置生成纯逻辑 (答案 → 配置对象); 已存在时默认不覆盖 |
 
-测试文件按语义命名 (如 `scan.test.ts`, `guard.test.ts`); 向导的 readline 交互不做端到端自动化, 由「答案到配置对象再到落盘决策」的纯逻辑单测覆盖。
+测试文件按语义命名 (如 `scan.contract.test.ts`, `guard.contract.test.ts`); 向导的 TTY 交互不做端到端自动化 (管道冒烟见 `init.smoke.test.ts`), 由「答案到配置对象再到落盘决策」的纯逻辑单测覆盖。
+
+实现落地后实测覆盖远超本表: 243 条测试 (含压测长跑、伪终端冒烟、双载体 e2e) 与 40 条转写金样本语料; 明细见各 `*.test.ts` 与 [转写契约套件](../protocol/README.md) 的覆盖表。
 
 ## 四、明确不做 (YAGNI)
 

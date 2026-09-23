@@ -48,7 +48,7 @@
 
 **验证口径 (实现落地后核验)**
 
-1. 静态核验: 扫描 `src/` 下全部 import 源, 只允许 `bun:` / `node:` 前缀与相对路径, 出现第三方包名即违规;
+1. 静态核验: 扫描 `src` / `bench` / `scripts` 下全部 import 源 (即 tsconfig 的 include 全域), 只允许 `bun:` / `node:` 前缀与相对路径, 出现第三方包名即违规;
 2. 双运行时直跑: `bun src/cli.ts` 与 `node src/cli.ts` 输出一致 (与 [ADR 0006](0006-dual-runtime-bun-first.md) 共用同一口径)。
 
 **关联引用**

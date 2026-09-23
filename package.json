@@ -12,7 +12,8 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "format": "prettier --write .",
-    "test": "bun test"
+    "test": "bun test",
+    "bench": "bun bench/run.ts"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "6.0.2",

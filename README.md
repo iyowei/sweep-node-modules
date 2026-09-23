@@ -3,8 +3,6 @@
 工作区级 `node_modules` 清理工具: 一次扫描多个根目录, 跨项目列出各处 `node_modules` 与体积, 确认后批量删除, 回收磁盘空间。
 
 > 分层说明: `@atom/cli-cleaner` 一类工具管「进入某个项目, 清它自己的产物」; 本工具管「站在工作区层面, 一次清理很多个项目」。两者分层共存, 见 [ADR 0001](docs/adrs/0001-workspace-level-cleaner.md)。
->
-> **状态**: 设计定稿、实现进行中; 当前入口为占位骨架 (运行会提示未实现), 实现落地后移除本行。
 
 ## 要求
 
@@ -68,7 +66,8 @@ bun install        # 安装 devDependencies, 并自动装好 git 钩子 (lefthoo
 bun run typecheck  # tsc --noEmit
 bun run lint       # oxlint
 bun run format     # prettier --write
-bun test           # bun test
+bun test           # bun test (243 条: 契约 / 鲁棒 / 压测 / 双载体 e2e / 伪终端冒烟)
+bun run bench      # 基准四组 (扫描 / 体积 / 真实工作区 / 压测)
 ```
 
 运行时双跑验证: `bun src/cli.ts` 与 `node src/cli.ts` 均可直接运行。
