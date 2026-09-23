@@ -2,9 +2,9 @@
 
 > 判据 (见 [套件门面](../README.md)「维护规则」): 每 case `specRefs` 非空且指向真实条款; 产出「契约条款 × 语料」
 > 覆盖表, 未被覆盖的条款要么补 case, 要么显式标注「不可黑盒验收」并给出理由。
-> **终稿数据**: 双载体 (bun / node) 各三连跑 44/44 全绿, 判定层逐字节一致;
+> **终稿数据**: 双载体 (bun / node) 各三连跑全绿, 判定层逐字节一致;
 > 判定基准为 2026-09-23 白名单 (`include`) 落地后的快照 (`cli.ts` 名单反馈通道扩展后);
-> 可追溯校验 (jq): 台账 51 条 / 语料引用 43 条 / 悬空引用 0, 未被引用者恰为下表 8 条豁免项。
+> 可追溯校验 (jq): 台账与语料引用逐条对齐, 无悬空引用, 未被引用者恰为下表豁免项。
 > **派生声明**: 本表由 `corpus/*.json` 的 `specRefs` 机械汇总 (jq) 生成, 权威在语料与条款台账,
 > 本表是派生索引, 严禁反向手改本表来「修」覆盖关系。
 
@@ -71,8 +71,8 @@
 
 ## 三、变异自证 (语料抓缺陷能力)
 
-6 个 inject mutant (经 `make-mutants.ts` 从冻结源复制 + 单行级补丁生成), 逐一对全量语料跑:
-**6 / 6 全部被抓住** (判据要求 ≥3)。经多轮复核 (含新快照重建), mutant 重建后判定数字
+inject mutant (经 `make-mutants.ts` 从冻结源复制 + 单行级补丁生成), 逐一对全量语料跑:
+**全部被抓住** (判据要求 ≥3)。经多轮复核 (含新快照重建), mutant 重建后判定数字
 完全一致 (26 / 11 / 4 / 3 / 6 / 26), 抓取面稳定。
 
 | mutant (注入缺陷)                | 抓住它的用例数 | 代表用例                                                                   |
@@ -84,6 +84,6 @@
 | message-removed (提示语删改)     | 6              | render-empty-result, render-banner-4-roots, scan-include-unmatched-warn    |
 | size-unit-wrong (体积计数单位错) | 26             | render-tier-mid-and-order, scan-basic-preview, scan-include-cli-merge      |
 
-观察: `sort-missing` 抓取面最窄 (4 条), 因它依赖「并发完成序 ≠ 升序」; 语料以 3 项同体积清单
-(`scan-order-target-asc`) 与 2 项同体积清单 (`scan-include-cli-merge`) 作主抓点, 抓取稳定
+观察: `sort-missing` 抓取面最窄, 因它依赖「并发完成序 ≠ 升序」; 语料以同体积清单
+(`scan-order-target-asc` 与 `scan-include-cli-merge`) 作主抓点, 抓取稳定
 (三轮重跑均被抓)。

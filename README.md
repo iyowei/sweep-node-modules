@@ -7,7 +7,7 @@
 ## 要求
 
 - 运行时二选一: **bun 或 node** 皆可 (双运行时, 装任一即可用)。
-- 取最新一代运行时 API: bun 任意近期版本; node 需原生支持 TypeScript 直跑的版本 (版本快照与实测记录见 [ADR 0006](docs/adrs/0006-dual-runtime-bun-first.md))。
+- 取最新一代运行时 API: bun 任意近期版本; node 需原生支持 TypeScript 直跑的版本 (从源码运行受此约束; npm 安装拿到的是编译产物 JS, 跑 JS 不必 TS 直跑能力, 但两种获取方式取同一版本下限; 版本快照与实测记录见 [ADR 0006](docs/adrs/0006-dual-runtime-bun-first.md))。
 - 零第三方运行时依赖 (只用运行时内置能力)。
 - 平台: Windows / macOS / Linux 三平台均可运行 (见 [ADR 0007](docs/adrs/0007-platform-portability.md))。
 
@@ -49,6 +49,8 @@ sweep-nm --include my-kits
 sweep-nm init
 ```
 
+清单顶栏尾部会标注本次实际使用的运行时 (如 `bun 1.4.2`), 仅交互终端显示 (非 TTY 不增噪音)。
+
 ## 配置
 
 配置文件位置 (平台自适应): Windows 为 `%APPDATA%\sweep-node-modules\config.json`, 其余为 `~/.config/sweep-node-modules/config.json`; 可用 `--config` 或环境变量 `SWEEP_NM_CONFIG` 覆盖。
@@ -67,7 +69,7 @@ sweep-nm init
 - `roots`: 扫描根目录, 任意多个; 重复或嵌套的根按真实路径去重。
 - `exclude`: 排除名单; 从根到 `node_modules` 的任意一级目录名命中即跳过 (多排除 = 少删, 安全方向)。
 - `include`: 包含名单 (白名单); 命中才纳入, 口径与 `exclude` 同款; 缺省或空数组 = 不过滤 (多包含 = 多删); 与 `exclude` 同时命中时 `exclude` 优先。写错名字会让结果直接为空, 故未命中的名字会在 stderr 警示。
-- 首次运行且无配置: 交互终端下自动进入初始化向导; 非交互环境 (脚本等) 以当前工作目录为根并提示, 不询问; 随时可用 `sweep-nm init` 重进向导。
+- 首次运行且无配置: 交互终端下自动进入初始化向导 (扫描根默认家目录); 非交互环境 (脚本等) 以当前工作目录为根并提示, 不询问; 随时可用 `sweep-nm init` 重进向导。
 
 > 字段定义以[设计文档](docs/designs/config-and-initialization.md)为准。
 
@@ -79,9 +81,10 @@ bun install        # 安装 devDependencies, 并自动装好 git 钩子 (lefthoo
 bun run typecheck  # tsc --noEmit
 bun run lint       # oxlint
 bun run format     # prettier --write
-bun test           # bun test (265 条: 契约 / 鲁棒 / 压测 / 双载体 e2e / 伪终端冒烟)
+bun test           # bun test (契约 / 鲁棒 / 压测 / 双载体 e2e / 伪终端冒烟)
 bun run bench      # 基准四组 (扫描 / 体积 / 真实工作区 / 压测)
-bun run conformance -- --target "bun src/cli.ts"  # 转写一致性验收 (44 条金样本, 见 docs/protocol/)
+bun run conformance -- --target "bun src/cli.ts"  # 转写一致性验收 (金样本语料见 docs/protocol/)
+bun run build      # 打包单文件 dist/cli.js (npm 分发的编译产物; 发布时由 prepublishOnly 自动跑)
 ```
 
 运行时双跑验证: `bun src/cli.ts` 与 `node src/cli.ts` 均可直接运行。

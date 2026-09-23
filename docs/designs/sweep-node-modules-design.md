@@ -19,6 +19,7 @@
 | 2026-09-23 | 补记: 三平台 (Windows / macOS / Linux) 可移植性与配置定位, 见 [ADR 0007](../adrs/0007-platform-portability.md); CLI 输出规格升级为色块视觉规范  |
 | 2026-09-23 | 实现落地回写: 模块表补 delete / 门面 / bench / scripts; 测试策略补实现覆盖指针; 关联 [ADR 0008](../adrs/0008-transcription-kit.md) 转写契约套件 |
 | 2026-09-23 | 分发形态: 编译产物 + 单文件打包发布到 npm (`@iyowei/sweep-node-modules`); 「明确不做」清单移除 npm 发布项                                       |
+| 2026-09-23 | 代码树补 npm 分发入口 `bin/sweep-nm.mjs`; 实测规模改为指代验收命令的实时输出 (不写死条数)                                                       |
 
 ## 分册索引
 
@@ -56,6 +57,7 @@ src/
 bench/                  # 基准仪器 (扫描 / 体积 / 真实工作区 / 压测四组)
 bin/sweep-nm            # sh 启动器: 挑选运行时 (Bun 优先, Node 回退) 后 exec src/cli.ts
 bin/sweep-nm.cmd        # cmd 启动器 (Windows): 与 sh 启动器同逻辑
+bin/sweep-nm.mjs        # npm 分发的 bin 入口 (优先跑编译产物 dist/cli.js): 三者同逻辑, 差异只在宿主
 scripts/transcription/  # 转写契约套件的验收器与变异生成器 (见 docs/protocol/)
 ```
 
@@ -82,7 +84,7 @@ scripts/transcription/  # 转写契约套件的验收器与变异生成器 (见 
 
 测试文件按语义命名 (如 `scan.contract.test.ts`, `guard.contract.test.ts`); 向导的 TTY 交互不做端到端自动化 (管道冒烟见 `init.smoke.test.ts`), 由「答案到配置对象再到落盘决策」的纯逻辑单测覆盖。
 
-实现落地后实测覆盖远超本表: 265 条测试 (含压测长跑、伪终端冒烟、双载体 e2e) 与 44 条转写金样本语料; 明细见各 `*.test.ts` 与 [转写契约套件](../protocol/README.md) 的覆盖表。
+实现落地后实测覆盖远超本表: 用例与语料规模以 `bun test` 与 `bun run conformance` 的实时输出为准 (含压测长跑、伪终端冒烟、双载体 e2e); 明细见各 `*.test.ts` 与 [转写契约套件](../protocol/README.md) 的覆盖表。
 
 ## 四、明确不做 (YAGNI)
 

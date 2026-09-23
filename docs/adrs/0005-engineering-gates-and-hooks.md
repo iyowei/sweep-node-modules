@@ -51,8 +51,8 @@
 **验证口径 (本次落地核验)**
 
 1. `bun install` 触发 `prepare`, pre-commit / pre-push 钩子安装到位;
-2. `bunx tsc --noEmit`、`bunx oxlint`、`bunx prettier --check` 全绿; `bun test` 全量全绿 (实现落地后 265 条, 含双载体 e2e 与伪终端冒烟);
-3. 六个 devDependencies 实装版本与 lock 声明逐一吻合。
+2. `bunx tsc --noEmit`、`bunx oxlint`、`bunx prettier --check` 全绿; `bun test` 全量全绿 (含双载体 e2e 与伪终端冒烟);
+3. devDependencies 实装版本与 lock 声明逐一吻合。
 
 **关联引用**
 
