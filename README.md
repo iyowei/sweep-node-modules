@@ -3,11 +3,13 @@
 工作区级 `node_modules` 清理工具: 一次扫描多个根目录, 跨项目列出各处 `node_modules` 与体积, 确认后批量删除, 回收磁盘空间。
 
 > 分层说明: `@atom/cli-cleaner` 一类工具管「进入某个项目, 清它自己的产物」; 本工具管「站在工作区层面, 一次清理很多个项目」。两者分层共存, 见 [ADR 0001](docs/adrs/0001-workspace-level-cleaner.md)。
+>
+> **状态**: 设计定稿、实现进行中; 当前入口为占位骨架 (运行会提示未实现), 实现落地后移除本行。
 
 ## 要求
 
 - 运行时二选一: **bun 或 node** 皆可 (双运行时, 装任一即可用)。
-- 取最新一代运行时 API: bun 任意近期版本; node 需原生支持 TypeScript 直跑的版本。本机实测 bun 1.4.2 / node 26.7.0 通过。
+- 取最新一代运行时 API: bun 任意近期版本; node 需原生支持 TypeScript 直跑的版本 (版本快照与实测记录见 [ADR 0006](docs/adrs/0006-dual-runtime-bun-first.md))。
 - 零第三方运行时依赖 (只用运行时内置能力)。
 
 ## 安装
@@ -52,6 +54,8 @@ sweep-nm init
 - `roots`: 扫描根目录, 任意多个; 重复或嵌套的根按真实路径去重。
 - `exclude`: 排除名单; 从根到 `node_modules` 的任意一级目录名命中即跳过 (多排除 = 少删, 安全方向)。
 - 首次运行且无配置: 交互终端下自动进入初始化向导; 非交互环境 (脚本等) 以当前工作目录为根并提示, 不询问; 随时可用 `sweep-nm init` 重进向导。
+
+> 字段定义以[设计文档](docs/designs/config-and-initialization.md)为准。
 
 ## 开发
 

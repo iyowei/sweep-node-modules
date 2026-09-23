@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    // bun 直跑 TS, 目标取保守基线
+    // bun / node 均可直跑 TS, 目标取保守基线
     "target": "ES2022",
     "lib": ["ES2022"],
     "module": "preserve",
