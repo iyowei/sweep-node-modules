@@ -59,9 +59,9 @@
 | OF-09 | 执行模式: 逐行 ✓ / ✗ (失败带原因), 末行 `汇总 成功 N 处 · 释放 X · 失败 M 处`               | cli-surface.md「输出规格」                                          | ✓                            |
 | OF-10 | 非 TTY / `NO_COLOR` → 零 ANSI 纯文本, 信息与结构不丢失                                      | cli-surface.md「降级」; ADR 0007                                    | ✓ (非 TTY 面)                |
 | OF-11 | 占位行: 体积列 `?` + 中性块 + note 原因 (仅预览; 执行模式按失败呈现)                        | cli.ts toEntries; render.ts                                         | ✓                            |
-| OF-12 | 清单与名单生效回执走 stdout; 告警 (含名单未匹配) / 错误走 stderr, 不污染清单                | cli.ts print / warn / notice / collectNameNotes; render.ts「notes」 | ✓ (非 TTY 面; 回执 TTY 专属) |
+| OF-12 | 清单与名单回执走 stdout; 告警 (含名单未匹配) / 错误走 stderr, 不污染清单                    | cli.ts print / warn / notice / collectNameNotes; render.ts「notes」 | ✓ (非 TTY 面; 回执 TTY 专属) |
 
-> **TTY 专属输出面 (不编条款号)**: 顶栏尾部的运行时自述 (` · bun 1.4.2`) 与顶栏下方的名单生效回执 (`░ 排除生效: alpha (1 处)` / `░ 包含命中: <name> (<n> 处)`) 仅在 stdout 为真终端时出现, 非 TTY 下整段省略 (判据见 `cli.ts` 的 `process.stdout.isTTY`; 回执由 `collectNameNotes` 产出, 经 `render.ts` 的 `notes` 落在清单之前)。二者不参与条款编号, 也不进语料断言: 黑盒验收器走管道, 原理上拿不到 TTY 面; 登记与豁免理由见 `conformance/coverage.md`「未覆盖条款」。
+> **TTY 专属输出面 (不编条款号)**: 顶栏尾部的运行时自述 (` · bun 1.4.2`) 与顶栏下方的名单回执 (`░ 排除生效: alpha (1 处)` / `░ 包含命中: <name> (<n> 处)`) 仅在 stdout 为真终端时出现, 非 TTY 下整段省略 (判据见 `cli.ts` 的 `process.stdout.isTTY`; 回执由 `collectNameNotes` 产出, 经 `render.ts` 的 `notes` 落在清单之前)。二者不参与条款编号, 也不进语料断言: 黑盒验收器走管道, 原理上拿不到 TTY 面; 登记与豁免理由见 `conformance/coverage.md`「未覆盖条款」。
 
 ## EC · 边界与错误语义 (重点是不可黑盒项与半完成语义)
 

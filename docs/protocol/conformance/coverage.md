@@ -58,7 +58,7 @@
 | OF-09 | 3      | delete-execute-multi-summary, delete-execute-ok, size-unmeasured-blocks-delete                                                                                                                                                                                                               |
 | OF-10 | 2      | cli-help, render-no-color-degraded (非 TTY 面; TTY 彩色面见下)                                                                                                                                                                                                                               |
 | OF-11 | 2      | size-unmeasured-blocks-delete, size-unmeasured-preview                                                                                                                                                                                                                                       |
-| OF-12 | 7      | cli-help, cli-unknown-arg, scan-basic-preview, scan-exclude-unmatched-warn, scan-include-unmatched-warn, scan-root-missing-warn, scan-unreadable-dir-warn (非 TTY 面; 名单生效回执为 TTY 专属, 见下)                                                                                         |
+| OF-12 | 7      | cli-help, cli-unknown-arg, scan-basic-preview, scan-exclude-unmatched-warn, scan-include-unmatched-warn, scan-root-missing-warn, scan-unreadable-dir-warn (非 TTY 面; 名单回执为 TTY 专属, 见下)                                                                                             |
 | EC-05 | 1      | delete-partial-failure-shell                                                                                                                                                                                                                                                                 |
 
 ## 二、未覆盖条款 (显式标注与理由)
@@ -74,7 +74,7 @@
 | EC-06 / OF-04 大档 | 成本性未覆盖        | 大档 (≥1GiB) 展示需真实写入 1 GiB 数据, 超出语料运行预算; 档位逻辑经小 / 中两档与 OF-05 覆盖                                                          |
 | OF-10 TTY 彩色面   | 二期 (pty)          | 彩色 / 着色只在 TTY 下开启, 需 pty 运行器 (设计定为二期); 非 TTY 降级面已覆盖                                                                         |
 | 运行时自述         | 二期 (pty)          | 顶栏尾部的运行时版本段 (` · bun 1.4.2`) 仅在 stdout 为真终端时出现, 非 TTY 下整段省略, 需 pty 运行器; 不编条款号, 见 `behavior-contract.md`「OF」区注 |
-| 名单生效回执       | 二期 (pty)          | 顶栏下方的 `░ 排除生效 / 包含命中` 回执行同属 TTY 专属面 (非 TTY 下整段省略), 需 pty 运行器; 名单未匹配警示走 stderr, 那一面已由语料覆盖              |
+| 名单回执           | 二期 (pty)          | 顶栏下方的 `░ 排除生效 / 包含命中` 回执所在行同属 TTY 专属面 (非 TTY 下整段省略), 需 pty 运行器; 名单未匹配警示走 stderr, 那一面已由语料覆盖          |
 
 ## 三、变异自证 (语料抓缺陷能力)
 
