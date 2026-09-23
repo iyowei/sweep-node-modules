@@ -7,7 +7,7 @@
 ## 要求
 
 - 业务逻辑**双运行时**: 有 bun 走 bun, 否则 node (功能一致, bun 启动更快)。
-- 取最新一代运行时 API: bun 任意近期版本; node 需原生支持 TypeScript 直跑的版本 (两种获取方式取同一版本下限; 版本快照与实测记录见 [ADR 0006](docs/adrs/0006-dual-runtime-bun-first.md))。
+- 取最新一代运行时 API: bun 任意近期版本; node 需原生支持 TypeScript 直跑的版本 (源码方式与包方式取同一版本下限; 版本快照与实测记录见 [ADR 0006](docs/adrs/0006-dual-runtime-bun-first.md))。
 - 零第三方运行时依赖 (只用运行时内置能力)。
 - 平台: Windows / macOS / Linux 三平台均可运行 (见 [ADR 0007](docs/adrs/0007-platform-portability.md))。
 
@@ -112,7 +112,7 @@ sweep-nm init
 - `roots`: 扫描根目录, 任意多个; 重复或嵌套的根按真实路径去重。
 - `exclude`: 排除名单; 从根到 `node_modules` 的任意一级目录名命中即跳过 (多排除 = 少删, 安全方向)。
 - `include`: 包含名单 (白名单); 命中才纳入, 口径与 `exclude` 同款; 缺省或空数组 = 不过滤 (多包含 = 多删); 与 `exclude` 同时命中时 `exclude` 优先。写错名字会让结果直接为空, 故未命中的名字会在 stderr 警示。
-- 两份名单里的 `node_modules` 一律被剔除: 它就是本工具的目标, 列入排除等于排掉唯一目标, 列入包含则永久零命中; 剔除后 `include` 为空数组 = 不过滤 (不是「只扫 node_modules」)。
+- 两份名单里的 `node_modules` 与 `.git` 一律被剔除: 前者是本工具的目标 (列入排除等于排掉唯一目标, 列入包含则永久零命中), 后者是扫描恒定跳过的目录; 剔除后 `include` 为空数组 = 不过滤 (不是「只扫 node_modules」)。
 - 首次运行且无配置: 交互终端下自动进入初始化向导 (扫描根默认家目录); 非交互环境 (脚本等) 以当前工作目录为根并提示, 不询问; 随时可用 `sweep-nm init` 重进向导。
 
 > 字段定义以[设计文档](docs/designs/config-and-initialization.md)为准。

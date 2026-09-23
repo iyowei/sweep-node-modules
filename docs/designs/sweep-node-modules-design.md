@@ -87,7 +87,7 @@ scripts/transcription/  # 转写契约套件的验收器与变异生成器 (见 
 
 测试文件按语义命名 (如 `scan.contract.test.ts`, `guard.contract.test.ts`); 向导的 TTY 交互不做端到端自动化 (管道冒烟见 `init.smoke.test.ts`), 由「答案到配置对象再到落盘决策」的纯逻辑单测覆盖。
 
-实现落地后实测覆盖远超本表: 用例与语料规模以 `bun test` 与 `bun run conformance` 的实时输出为准 (含压测长跑、伪终端冒烟、双载体 e2e); 明细见各 `*.test.ts` 与 [转写契约套件](../protocol/README.md) 的覆盖表。
+实现落地后实测覆盖远超本表: 用例与语料规模以 `bun test` 与 `bun run conformance -- --target "bun src/cli.ts"` 的实时输出为准 (后者不参数化, 需对两个载体各跑一遍; 含压测长跑、伪终端冒烟、双载体 e2e); 明细见各 `*.test.ts` 与 [转写契约套件](../protocol/README.md) 的覆盖表。
 
 ## 四、明确不做 (YAGNI)
 
