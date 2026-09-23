@@ -2,6 +2,7 @@
   "name": "sweep-node-modules",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "bin": {
     "sweep-nm": "bin/sweep-nm"
