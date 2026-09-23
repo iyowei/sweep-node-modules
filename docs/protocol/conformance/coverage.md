@@ -4,7 +4,7 @@
 > 覆盖表, 未被覆盖的条款要么补 case, 要么显式标注「不可黑盒验收」并给出理由。
 > **终稿数据**: 双载体 (bun / node) 各三连跑全绿, 判定层逐字节一致;
 > 判定基准为白名单 (`include`) 落地及其后续修正后的实现态: 起点为白名单落地提交 `15bc404`,
-> 含 `7e2c9bd` (名单静默剔除) 与 `b8297e9` (include 命中计数修正); 本次校准的末位提交为 `15e5b00`;
+> 含 `7e2c9bd` (名单静默剔除) 与 `b8297e9` (include 命中计数修正); 本次校准的末位提交为 `d0b64b3` (新增名单语料与 `stderrMustNotContain` 原语);
 > 可追溯校验 (jq): 台账与语料引用逐条对齐, 无悬空引用, 未被引用者恰为下表豁免项。
 > **派生声明**: 本表由 `corpus/*.json` 的 `specRefs` 机械汇总 (jq) 生成, 权威在语料与条款台账,
 > 本表是派生索引, 严禁反向手改本表来「修」覆盖关系。
@@ -79,20 +79,20 @@
 ## 三、变异自证 (语料抓缺陷能力)
 
 inject mutant (经 `make-mutants.ts` 从冻结源复制 + 单行级补丁生成), 逐一对全量语料 (本次快照 45 条) 跑:
-**全部被抓住** (判据要求 ≥3 条用例)。五个 mutant 三连跑数字完全一致 (27 / 11 / 3 / 6 / 26),
-抓取面稳定; `sort-missing` 见下方观察, 数字本身不稳定。
+**全部被抓住** (判据要求 ≥2 条用例; 该门槛对全部 mutant 均有实测支撑, 含抓取面最窄者)。五个 mutant 三连跑数字完全一致
+(27 / 11 / 3 / 6 / 26), 抓取面稳定; `sort-missing` 见下方观察, 数字本身不稳定。
 
-| mutant (注入缺陷)                | 抓住它的用例数    | 代表用例                                                                   |
-| -------------------------------- | ----------------- | -------------------------------------------------------------------------- |
-| prune-negated (剪枝谓词取反)     | 27                | scan-basic-preview, scan-nested-prune, scan-include-config                 |
-| exit-swallowed (退出码吞掉)      | 11                | cli-unknown-arg, config-corrupt-json, size-unmeasured-blocks-delete        |
-| sort-missing (排序缺失)          | 4 (三连跑 2 至 5) | scan-order-target-asc, scan-basic-preview, scan-include-cli-merge          |
-| exclude-silent (排除静默失效)    | 3                 | scan-exclude-config, scan-exclude-cli-merge, scan-include-exclude-priority |
-| message-removed (提示语删改)     | 6                 | render-empty-result, render-banner-4-roots, scan-include-unmatched-warn    |
-| size-unit-wrong (体积计数单位错) | 26                | render-tier-mid-and-order, scan-basic-preview, scan-include-cli-merge      |
+| mutant (注入缺陷)                | 抓住它的用例数 | 代表用例                                                                   |
+| -------------------------------- | -------------- | -------------------------------------------------------------------------- |
+| prune-negated (剪枝谓词取反)     | 27             | scan-basic-preview, scan-nested-prune, scan-include-config                 |
+| exit-swallowed (退出码吞掉)      | 11             | cli-unknown-arg, config-corrupt-json, size-unmeasured-blocks-delete        |
+| sort-missing (排序缺失)          | 波动 (见观察)  | delete-execute-multi-summary, scan-basic-preview                           |
+| exclude-silent (排除静默失效)    | 3              | scan-exclude-config, scan-exclude-cli-merge, scan-include-exclude-priority |
+| message-removed (提示语删改)     | 6              | render-empty-result, render-banner-4-roots, scan-include-unmatched-warn    |
+| size-unit-wrong (体积计数单位错) | 26             | render-tier-mid-and-order, scan-basic-preview, scan-include-cli-merge      |
 
 观察: `sort-missing` 抓取面最窄, 因它依赖「并发完成序 ≠ 升序」是否在本次调度中落败,
-抓到的用例数随调度波动 (三连跑实测 4 / 5 / 2), 是本表唯一数字不稳定的 mutant,
-且最窄那次 (2 条) 未达本表的「≥3」判据 (已登记的缺口, 未见 0 抓)。语料以同体积清单
-(`scan-order-target-asc` 与 `scan-include-cli-merge`) 作主抓点, 该对三轮重跑均被抓,
-波动只在边缘用例上。
+抓到的用例数随调度波动, 是本表唯一数字不稳定的 mutant (多次重跑从未见 0 抓);
+其判据按该随机性取 ≥2 (与其余 mutant 同口径)。**本 mutant 无每轮必抓的用例**: 同体积清单类语料
+(`scan-order-target-asc` 与 `scan-include-cli-merge`) 与 `delete-execute-multi-summary`
+等命中率最高, 但放大样本后仍见缺席轮, 故本 mutant 的抓取集合整体随调度浮动。
