@@ -95,22 +95,22 @@ export function formatBytes(bytes: number): string {
  * ### 数据追踪示例
  * ```text
  * Input（真实 Payload）
- *   options.mode = 'preview', options.roots = ['/Users/iyowei/rongmai/development']
+ *   options.mode = 'preview', options.roots = ['/Users/iyowei/workspace/development']
  *   options.entries = [
- *     { target: '/Users/iyowei/rongmai/development/xueyan/node_modules', bytes: 90177536, project: 'xueyan' },
- *     { target: '/Users/iyowei/rongmai/development/hdapp/node_modules', bytes: 4939212390, project: 'hdapp' },
+ *     { target: '/Users/iyowei/workspace/development/docs-site/node_modules', bytes: 90177536, project: 'docs-site' },
+ *     { target: '/Users/iyowei/workspace/development/acme-web/node_modules', bytes: 4939212390, project: 'acme-web' },
  *   ]
  *   options.color = false, options.home = '/Users/iyowei'
  *
  * 步骤 1：按体积降序
- *   rows = [hdapp 4939212390, xueyan 90177536]
+ *   rows = [acme-web 4939212390, docs-site 90177536]
  *
  * 步骤 2：定列宽 (按显示宽度)
- *   volumeWidth = 6 ("4.6 GB" 与 "86 MB" 取长), nameWidth = 6 ("xueyan")
+ *   volumeWidth = 6 ("4.6 GB" 与 "86 MB" 取长), nameWidth = 9 ("docs-site")
  *
  * 步骤 3：成行 (档位块随档位变, 体积右对齐, 项目名左对齐, 路径缩写)
- *   body = ['  █ 4.6 GB  hdapp     ~/rongmai/development/hdapp',
- *           '  ▓  86 MB  xueyan    ~/rongmai/development/xueyan']
+ *   body = ['  █ 4.6 GB  acme-web     ~/workspace/development/acme-web',
+ *           '  ▓  86 MB  docs-site    ~/workspace/development/docs-site']
  *
  * 步骤 4：末行合计
  *   foot = '  █ 合计 2 处 · 4.6 GB   加 --yes 执行删除'

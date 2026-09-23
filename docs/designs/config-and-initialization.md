@@ -26,8 +26,8 @@
 
 ```json
 {
-  "roots": ["/Users/iyowei/rongmai/development"],
-  "exclude": ["fiu-kits"]
+  "roots": ["/Users/iyowei/workspace/development"],
+  "exclude": ["my-kits"]
 }
 ```
 
@@ -36,7 +36,7 @@
 | `roots`   | `string[]` | 扫描根, 任意多个; 按 realpath 去重 (防嵌套或重复写导致重复统计) |
 | `exclude` | `string[]` | 排除名单; 从根到命中点的任意一级目录名命中即跳过; 缺省视为 `[]` |
 
-- 排除语义取「任意一级目录名命中」: 写 `fiu-kits` (项目名) 或 `shortime` (容器名) 都成立; 多排除 = 少删, 天然落在安全方向; 未命中任何目录的名字会在 stderr 给出警示 (保命名单不得静默失效)。
+- 排除语义取「任意一级目录名命中」: 写 `my-kits` (项目名) 或 `url-tool` (容器名) 都成立; 多排除 = 少删, 天然落在安全方向; 未命中任何目录的名字会在 stderr 给出警示 (保命名单不得静默失效)。
 - 命令行 `--exclude` 与配置合并 (见 [命令面与输出](cli-surface.md))。
 - 配置缺失与 `sweep-nm init` 的行为见下方「配置初始化模型」。
 

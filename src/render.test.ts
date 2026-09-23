@@ -7,11 +7,12 @@ import { describe, expect, test } from 'bun:test';
 
 import { assertGolden } from './golden.ts';
 import {
+  ACME_WEB,
+  DATA_PIPELINE,
+  DOCS_SITE,
   GIB,
-  HDAPP,
   HOME,
   MIB,
-  NEURALFIN,
   NOTE_BOOK,
   RESULTS,
   REWRITTEN,
@@ -20,7 +21,6 @@ import {
   TIER_BIG,
   TIER_MID,
   UNMEASURED,
-  XUEYAN,
   linesOf,
   listLines,
   previewOptions,
@@ -69,7 +69,7 @@ describe('顶栏', () => {
       render({ ...previewOptions, roots: [ROOT_DEV, `${HOME}/work`] }),
     );
 
-    expect(head).toContain('2 个根: ~/rongmai/development · ~/work');
+    expect(head).toContain('2 个根: ~/workspace/development · ~/work');
   });
 
   test('根数为 3 时仍列出 (边界)', () => {
@@ -100,14 +100,14 @@ describe('顶栏', () => {
 
 describe('清单行', () => {
   test('按体积降序, 与输入顺序无关', () => {
-    const shuffled = [XUEYAN, HDAPP, NOTE_BOOK, NEURALFIN];
+    const shuffled = [DOCS_SITE, ACME_WEB, NOTE_BOOK, DATA_PIPELINE];
 
     const out = render({ ...previewOptions, entries: shuffled });
 
     expect(listLines(out).map(projectOf)).toEqual([
-      'hdapp',
-      'neuralfin',
-      'xueyan',
+      'acme-web',
+      'data-pipeline',
+      'docs-site',
       '学习笔记',
     ]);
   });
@@ -154,10 +154,10 @@ describe('对齐', () => {
   });
 
   test('项目名与路径同列起 (列宽自适应最长项)', () => {
-    const starts = ['hdapp', 'neuralfin', 'xueyan'].map((project) =>
+    const starts = ['acme-web', 'data-pipeline', 'docs-site'].map((project) =>
       rowOf(out, project).indexOf(project),
     );
-    const paths = ['hdapp', 'neuralfin', 'xueyan'].map((project) =>
+    const paths = ['acme-web', 'data-pipeline', 'docs-site'].map((project) =>
       rowOf(out, project).indexOf('~/'),
     );
 
@@ -166,12 +166,14 @@ describe('对齐', () => {
   });
 
   test('汉字按 2 列计, 中文项目名的补位空格少于字符数算法', () => {
-    // "学习笔记" 显示宽 8, 最长名 "neuralfin" 显示宽 9: 补 1 + 间隔 4 = 5 空格
-    expect(rowOf(out, '学习笔记')).toContain('学习笔记     ~/笔记/学习笔记');
+    // "学习笔记" 显示宽 8, 最长名 "data-pipeline" 显示宽 13: 补 5 + 间隔 4 = 9 空格
+    expect(rowOf(out, '学习笔记')).toContain(
+      '学习笔记         ~/笔记/学习笔记',
+    );
   });
 
   test('路径展示为项目目录, node_modules 后缀不外露', () => {
-    expect(out).toContain('~/rongmai/development/hdapp');
+    expect(out).toContain('~/workspace/development/acme-web');
     expect(out).not.toContain('node_modules');
   });
 });
@@ -208,7 +210,7 @@ describe('执行模式', () => {
     expect(rows).toHaveLength(4);
     expect(rows.filter((line) => line.includes('✓'))).toHaveLength(3);
     expect(rows.filter((line) => line.includes('✗'))).toHaveLength(1);
-    expect(rows[1]).toContain('neuralfin');
+    expect(rows[1]).toContain('data-pipeline');
     expect(rows[1]).toContain('EACCES: permission denied');
   });
 
@@ -255,7 +257,7 @@ describe('降级 (color: false)', () => {
   test('家目录未命中时不缩写, 原样输出绝对路径', () => {
     const out = render({ ...previewOptions, home: '/nope' });
 
-    expect(out).toContain(`${HOME}/rongmai/development/hdapp`);
+    expect(out).toContain(`${HOME}/workspace/development/acme-web`);
     expect(out).not.toContain('~/');
   });
 });
@@ -279,7 +281,7 @@ describe('未测到体积的占位 (bytes undefined)', () => {
 
   test('note 附行尾', () => {
     expect(rowOf(out, 'locked')).toContain(
-      '~/rongmai/development/locked  体积统计失败: 权限不足',
+      '~/workspace/development/locked  体积统计失败: 权限不足',
     );
   });
 
@@ -322,7 +324,7 @@ describe('未测到体积的占位 (bytes undefined)', () => {
     const text = render({
       ...previewOptions,
       mode: 'execute',
-      entries: [UNMEASURED, { ...HDAPP, ok: true }],
+      entries: [UNMEASURED, { ...ACME_WEB, ok: true }],
     });
     const last = linesOf(text).at(-1) as string;
 

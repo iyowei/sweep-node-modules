@@ -48,13 +48,13 @@ type ParseOutcome =
  * ### 数据追踪示例
  * ```text
  * Input（真实 Payload）
- *   argv = ['--exclude', 'fiu-kits', '--yes']
+ *   argv = ['--exclude', 'my-kits', '--yes']
  *
  * 步骤 1：逐项识别
- *   --exclude 收值 'fiu-kits'; --yes 置位; 无位置参数
+ *   --exclude 收值 'my-kits'; --yes 置位; 无位置参数
  *
  * Output（数据契约）
- *   return { ok: true, options: { command: 'sweep', yes: true, exclude: ['fiu-kits'], help: false } }
+ *   return { ok: true, options: { command: 'sweep', yes: true, exclude: ['my-kits'], help: false } }
  * ```
  */
 function parseArgs(argv: string[]): ParseOutcome {
@@ -202,7 +202,7 @@ interface ResolvedConfig {
  *   loadResolvedConfig → { state: 'absent' }
  *
  * 步骤 2：非交互 → 以当前目录为根并标记回退态
- *   return { config: { roots: ['/Users/iyowei/rongmai/development'], exclude: [] }, fallback: true }
+ *   return { config: { roots: ['/Users/iyowei/workspace/development'], exclude: [] }, fallback: true }
  *
  * Output（数据契约）
  *   return ResolvedConfig (向导取消 / 拒绝覆盖时 return null, 本次不启动清理)

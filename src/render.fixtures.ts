@@ -6,7 +6,7 @@ import type { RenderEntry, RenderOptions } from './render.ts';
 
 export const HOME = '/Users/iyowei';
 /** 主根: 顶栏列根与样例目标路径共用 */
-export const ROOT_DEV = `${HOME}/rongmai/development`;
+export const ROOT_DEV = `${HOME}/workspace/development`;
 /** 预览入参的默认根清单 (样例目标路径与之一致) */
 const ROOTS = [ROOT_DEV];
 export const GIB = 1024 ** 3;
@@ -17,33 +17,38 @@ export const TIER_BIG = GIB;
 export const TIER_MID = 100 * MIB;
 
 /** 固定样例: 覆盖大 / 中 / 小三档 + 中文项目名与中文路径 */
-export const HDAPP: RenderEntry = {
-  project: 'hdapp',
+export const ACME_WEB: RenderEntry = {
+  project: 'acme-web',
   bytes: Math.round(4.6 * GIB),
-  target: `${ROOT_DEV}/hdapp/node_modules`,
+  target: `${ROOT_DEV}/acme-web/node_modules`,
 };
-export const NEURALFIN: RenderEntry = {
-  project: 'neuralfin',
+export const DATA_PIPELINE: RenderEntry = {
+  project: 'data-pipeline',
   bytes: 620 * MIB,
-  target: `${ROOT_DEV}/neuralfin/node_modules`,
+  target: `${ROOT_DEV}/data-pipeline/node_modules`,
 };
-export const XUEYAN: RenderEntry = {
-  project: 'xueyan',
+export const DOCS_SITE: RenderEntry = {
+  project: 'docs-site',
   bytes: 86 * MIB,
-  target: `${ROOT_DEV}/xueyan/node_modules`,
+  target: `${ROOT_DEV}/docs-site/node_modules`,
 };
 export const NOTE_BOOK: RenderEntry = {
   project: '学习笔记',
   bytes: 12 * MIB,
   target: `${HOME}/笔记/学习笔记/node_modules`,
 };
-export const SAMPLES: RenderEntry[] = [HDAPP, NEURALFIN, XUEYAN, NOTE_BOOK];
+export const SAMPLES: RenderEntry[] = [
+  ACME_WEB,
+  DATA_PIPELINE,
+  DOCS_SITE,
+  NOTE_BOOK,
+];
 
 /** 执行模式样例: 1 处失败并附原因 */
 export const RESULTS: RenderEntry[] = [
-  { ...HDAPP, ok: true },
-  { ...NEURALFIN, ok: false, error: 'EACCES: permission denied' },
-  { ...XUEYAN, ok: true },
+  { ...ACME_WEB, ok: true },
+  { ...DATA_PIPELINE, ok: false, error: 'EACCES: permission denied' },
+  { ...DOCS_SITE, ok: true },
   { ...NOTE_BOOK, ok: true },
 ];
 

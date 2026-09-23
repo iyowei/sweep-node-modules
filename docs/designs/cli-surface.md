@@ -41,9 +41,9 @@ sweep-nm --help             帮助
 
 ```text
 ▍ SWEEP-NM  预览 · 2 个根: ~/dev · ~/lab
-  █ 4.6 GB  hdapp        ~/dev/hdapp
-  ▓ 1.6 GB  neuralfin    ~/dev/neuralfin
-  ▒ 366 MB  xueyan       ~/lab/xueyan
+  █ 4.6 GB  acme-web         ~/dev/acme-web
+  ▓ 1.6 GB  data-pipeline    ~/dev/data-pipeline
+  ▒ 366 MB  docs-site        ~/lab/docs-site
   █ 合计 3 处 · 6.5 GB   加 --yes 执行删除
 ```
 

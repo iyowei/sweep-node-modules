@@ -2,7 +2,7 @@
 
 工作区级 `node_modules` 清理工具: 一次扫描多个根目录, 跨项目列出各处 `node_modules` 与体积, 确认后批量删除, 回收磁盘空间。
 
-> 分层说明: `@atom/cli-cleaner` 一类工具管「进入某个项目, 清它自己的产物」; 本工具管「站在工作区层面, 一次清理很多个项目」。两者分层共存, 见 [ADR 0001](docs/adrs/0001-workspace-level-cleaner.md)。
+> 分层说明: 单项目清理工具管「进入某个项目, 清它自己的产物」; 本工具管「站在工作区层面, 一次清理很多个项目」。两者分层共存, 见 [ADR 0001](docs/adrs/0001-workspace-level-cleaner.md)。
 
 ## 要求
 
@@ -32,7 +32,7 @@ sweep-nm
 sweep-nm --yes
 
 # 临时追加排除(可重复)
-sweep-nm --exclude fiu-kits --exclude shortime
+sweep-nm --exclude my-kits --exclude url-tool
 
 # 初始化向导: 交互式生成配置文件
 sweep-nm init
@@ -45,10 +45,10 @@ sweep-nm init
 ```json
 {
   "roots": [
-    "/Users/iyowei/rongmai/development",
+    "/Users/iyowei/workspace/development",
     "/Users/iyowei/self/development"
   ],
-  "exclude": ["fiu-kits"]
+  "exclude": ["my-kits"]
 }
 ```
 

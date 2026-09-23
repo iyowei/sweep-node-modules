@@ -25,7 +25,7 @@
 
 ## 一、定位与成功标准
 
-工作区级 `node_modules` 清理工具: 一次扫描多个根目录, 跨项目列出各处 `node_modules` 与体积, 确认后批量删除。与单项目工具 (cli-cleaner 一类) 分层共存, 见 [ADR 0001](../adrs/0001-workspace-level-cleaner.md)。
+工作区级 `node_modules` 清理工具: 一次扫描多个根目录, 跨项目列出各处 `node_modules` 与体积, 确认后批量删除。与单项目清理工具分层共存, 见 [ADR 0001](../adrs/0001-workspace-level-cleaner.md)。
 
 成功标准 (按个人小工具档位):
 

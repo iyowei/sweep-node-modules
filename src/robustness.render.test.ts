@@ -6,7 +6,7 @@ import { describe, expect, test } from 'bun:test';
 
 import { POSIX_STYLE, WIN32_STYLE } from './guard.ts';
 import {
-  HDAPP,
+  ACME_WEB,
   HOME,
   MIB,
   REWRITTEN,
@@ -74,7 +74,7 @@ describe('控制字符与换行净化', () => {
       mode: 'execute',
       entries: [
         {
-          ...HDAPP,
+          ...ACME_WEB,
           ok: false,
           error: 'EACCES: denied\n  at async rm',
           note: '体积统计失败\n权限不足',
@@ -122,12 +122,12 @@ describe('控制字符与换行净化', () => {
 });
 
 describe('路径风味矩阵 (posix / win32)', () => {
-  const WIN_TARGET = 'C:\\work\\hdapp\\node_modules';
+  const WIN_TARGET = 'C:\\work\\acme-web\\node_modules';
   const WIN_HOME = 'C:\\Users\\iyowei';
   const winBase: RenderOptions = {
     mode: 'preview',
     roots: ['C:\\work'],
-    entries: [{ project: 'hdapp', bytes: 620 * MIB, target: WIN_TARGET }],
+    entries: [{ project: 'acme-web', bytes: 620 * MIB, target: WIN_TARGET }],
     color: false,
     home: WIN_HOME,
     pathStyle: WIN32_STYLE,
@@ -136,40 +136,40 @@ describe('路径风味矩阵 (posix / win32)', () => {
   test('win32 后缀剥除: 反斜杠 node_modules 后缀被剥掉', () => {
     const out = render(winBase);
 
-    expect(out).toContain('C:\\work\\hdapp');
+    expect(out).toContain('C:\\work\\acme-web');
     expect(out).not.toContain('node_modules');
   });
 
   test('win32 家目录祖先: 反斜杠前缀可缩写为 ~', () => {
     const entries = [
       {
-        project: 'hdapp',
+        project: 'acme-web',
         bytes: 620 * MIB,
-        target: `${WIN_HOME}\\hdapp\\node_modules`,
+        target: `${WIN_HOME}\\acme-web\\node_modules`,
       },
     ];
     const out = render({ ...winBase, entries });
 
-    expect(out).toContain('~\\hdapp');
+    expect(out).toContain('~\\acme-web');
     expect(out).not.toContain(WIN_HOME);
   });
 
   test('win32 大小写不敏感: 前缀与后缀大小写不同仍命中', () => {
     const entries = [
       {
-        project: 'hdapp',
+        project: 'acme-web',
         bytes: 620 * MIB,
-        target: 'C:\\users\\IYOWEI\\hdapp\\NODE_MODULES',
+        target: 'C:\\users\\IYOWEI\\acme-web\\NODE_MODULES',
       },
     ];
     const out = render({ ...winBase, entries });
 
-    expect(out).toContain('~\\hdapp');
+    expect(out).toContain('~\\acme-web');
   });
 
   test('posix 风味不误伤 win32 形式路径 (风味确由注入决定)', () => {
     const entries = [
-      { project: 'hdapp', bytes: 620 * MIB, target: WIN_TARGET },
+      { project: 'acme-web', bytes: 620 * MIB, target: WIN_TARGET },
     ];
     const out = render({
       ...winBase,
@@ -184,9 +184,9 @@ describe('路径风味矩阵 (posix / win32)', () => {
   test('posix 风味仍按正斜杠剥除与缩写 (回归)', () => {
     const entries = [
       {
-        project: 'hdapp',
+        project: 'acme-web',
         bytes: 620 * MIB,
-        target: '/Users/iyowei/work/hdapp/node_modules',
+        target: '/Users/iyowei/work/acme-web/node_modules',
       },
     ];
     const out = render({
@@ -196,7 +196,7 @@ describe('路径风味矩阵 (posix / win32)', () => {
       home: '/Users/iyowei',
     });
 
-    expect(out).toContain('~/work/hdapp');
+    expect(out).toContain('~/work/acme-web');
     expect(out).not.toContain('node_modules');
   });
 });

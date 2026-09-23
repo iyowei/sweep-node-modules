@@ -308,8 +308,8 @@ describe('config 契约: 显式来源缺失报错 (loadResolvedConfig)', () => {
 describe('config 契约: 合并 (mergeExcludes)', () => {
   test('追加与去重: 配置在前, 命令行在后, 保序', () => {
     expect(
-      mergeExcludes(['fiu-kits', 'shortime'], ['shortime', 'xueyan']),
-    ).toEqual(['fiu-kits', 'shortime', 'xueyan']);
+      mergeExcludes(['my-kits', 'url-tool'], ['url-tool', 'docs-site']),
+    ).toEqual(['my-kits', 'url-tool', 'docs-site']);
   });
 
   test('空输入与配置自身重复一并归并', () => {
