@@ -1,0 +1,9 @@
+# bun 配置
+# linker = "hoisted" 是让 oxlint / prettier 等 Node CJS 工具链能正确解析
+# peer dependency 的关键。若改成 isolated, 这些工具的插件会解析到全局缓存
+# 的符号链接路径, 而 peer 依赖落在平行缓存目录, 找不到, 工具链直接报错。
+
+[install]
+frozenLockfile = false
+linker = "hoisted"
+registry = "https://registry.npmmirror.com"

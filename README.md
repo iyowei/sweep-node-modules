@@ -51,6 +51,19 @@ sweep-nm init
 - `exclude`: 排除名单; 从根到 `node_modules` 的任意一级目录名命中即跳过 (多排除 = 少删, 安全方向)。
 - 首次运行且无配置: 交互终端下自动进入初始化向导; 非交互环境 (脚本等) 以当前工作目录为根并提示, 不询问; 随时可用 `sweep-nm init` 重进向导。
 
+## 开发
+
+```shell
+bun install        # 安装 devDependencies, 并自动装好 git 钩子 (lefthook)
+
+bun run typecheck  # tsc --noEmit
+bun run lint       # oxlint
+bun run format     # prettier --write
+bun test           # bun test
+```
+
+提交与推送由 lefthook 把关: pre-commit 增量 (prettier 重暂存 + oxlint + 全量类型检查), pre-push 全量只读 (typecheck / test / oxlint / prettier `--check`)。
+
 ## 文档
 
 - [工程技术文档总索引](docs/README.md)

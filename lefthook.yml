@@ -1,0 +1,53 @@
+# Git 钩子门禁 (lefthook)
+#
+# 分层策略:
+#   pre-commit 增量门禁: prettier / oxlint 只扫暂存文件; type-check 例外,
+#               不传 {staged_files}, 跑全项目 tsc --noEmit; prettier 格式化后
+#               自动重暂存
+#   pre-push   全量门禁: rebase / merge / cherry-pick 重放提交不触发 pre-commit,
+#               base 的改动会让本次提交产生「语义冲突」(如 import 失配),
+#               push 是代码外流的唯一必经闸门, 在此全量只读兜底
+#
+# 注意 {staged_files} 模板只在 pre-commit 阶段成立, push 阶段没有暂存区概念,
+# 因此 pre-push 一律只读: prettier 用 --check 而非 --write, 不设 stage_fixed
+# (--write 在 push 阶段是纯副作用: 改动进不了正在推送的提交, 只在本地凭空多出
+# 未提交改动)。
+
+pre-commit:
+  parallel: false
+  commands:
+    # TypeScript 全量类型检查: 不传 {staged_files}, 天然全项目执行
+    type-check:
+      glob: '*.{ts,tsx}'
+      run: bunx tsc --noEmit
+
+    # JS/TS: prettier 格式化后自动重暂存, 再 oxlint
+    prettier-js:
+      glob: '*.{ts,tsx}'
+      run: bunx prettier --write --log-level error {staged_files}
+      stage_fixed: true
+
+    oxlint:
+      glob: '*.{ts,tsx}'
+      run: bunx oxlint {staged_files}
+
+    # 非 JS/TS: 仅 prettier 格式化
+    prettier-other:
+      glob: '*.{md,mdx,json,yaml,yml}'
+      run: bunx prettier --write --log-level error {staged_files}
+      stage_fixed: true
+
+pre-push:
+  parallel: false
+  commands:
+    type-check:
+      run: bun run typecheck
+
+    test:
+      run: bun test
+
+    oxlint:
+      run: bunx oxlint
+
+    prettier:
+      run: bunx prettier --check '**/*.{ts,tsx,md,mdx,json,yaml,yml}'
