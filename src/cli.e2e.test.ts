@@ -471,6 +471,7 @@ function defineExecuteCases(runner: string, available: boolean): void {
           [
             { prompt: '扫描根', input: '\n' }, // 取默认根 (家目录)
             { prompt: '排除名单', input: '\n' },
+            { prompt: '包含名单', input: '\n' },
             { prompt: '确认写入', input: 'y\n' },
           ],
           { cwd: workspace.root, env: { HOME: home } },

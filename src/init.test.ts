@@ -78,7 +78,7 @@ function makeDeps(options: {
 describe('runInit: written 路径', () => {
   test('开场提示 + 空答取默认根, 排除留空; 回显后默认确认写入', async () => {
     const { deps, writes, askCalls, confirmCalls, prints } = makeDeps({
-      asks: ['', ''],
+      asks: ['', '', ''],
       confirms: [true],
     });
 
@@ -94,7 +94,7 @@ describe('runInit: written 路径', () => {
     // 顶栏先出; 开场一句作中性提示行, 回显解析结果在确认前可见, 收尾落盘回执
     expect(prints[0]).toBe('▍ SWEEP-NM  初始化向导');
     expect(prints[1]).toBe('  ░ 首次使用, 先确定扫描范围');
-    expect(prints).toContain('  ░ 将写入 1 个扫描根 · 排除 0 条');
+    expect(prints).toContain('  ░ 将写入 1 个扫描根 · 排除 0 条 · 包含 0 条');
     // 落盘回执: 成功标记 + 家目录缩写 (降级态只去色码), 随后回显与落盘文件逐字一致的 JSON 原文
     expect(prints).toContain(
       '  ✓ 配置已写入: ~/.config/sweep-node-modules/config.json',
@@ -107,7 +107,7 @@ describe('runInit: written 路径', () => {
 
   test('逗号与空白混用的多根, 排除名单非空; 回显两侧解析结果', async () => {
     const { deps, writes, prints } = makeDeps({
-      asks: ['/a, /b  /c', 'dist, coverage'],
+      asks: ['/a, /b  /c', 'dist, coverage', ''],
       confirms: [true],
     });
 
@@ -122,14 +122,14 @@ describe('runInit: written 路径', () => {
       },
     });
     expect(writes).toHaveLength(1);
-    expect(prints).toContain('  ░ 将写入 3 个扫描根 · 排除 2 条');
+    expect(prints).toContain('  ░ 将写入 3 个扫描根 · 排除 2 条 · 包含 0 条');
   });
 
   test('已存在配置且确认覆盖: 覆盖确认默认否, 写入确认默认 Y', async () => {
     const { deps, writes, confirmCalls } = makeDeps({
       configExists: true,
       confirms: [true, true],
-      asks: ['/root', ''],
+      asks: ['/root', '', ''],
     });
 
     const result = await runInit(deps);
@@ -145,7 +145,7 @@ describe('runInit: written 路径', () => {
   test('根不存在: 逐个提示后重问该问, 坏输入不进配置', async () => {
     const { deps, askCalls, prints } = makeDeps({
       rootExists: (path) => path === '/ok',
-      asks: ['/missing-a /missing-b', '/ok', ''],
+      asks: ['/missing-a /missing-b', '/ok', '', ''],
       confirms: [true],
     });
 
@@ -157,13 +157,13 @@ describe('runInit: written 路径', () => {
     });
     expect(prints).toContain('  ✗ 根不存在: /missing-a');
     expect(prints).toContain('  ✗ 根不存在: /missing-b');
-    // 根问了两次 (重问), 加排除一次, 共三次
-    expect(askCalls).toHaveLength(3);
+    // 根问了两次 (重问), 加排除与包含名单各一次, 共四次
+    expect(askCalls).toHaveLength(4);
     expect(askCalls[1]!.question).toBe(askCalls[0]!.question);
   });
 
   test('着色开关只改色码: 剥去 ANSI 后与降级态逐字一致', async () => {
-    const script = { asks: ['', ''], confirms: [true] };
+    const script = { asks: ['', '', ''], confirms: [true] };
     const plain = makeDeps(script);
     const colored = makeDeps({ ...script, color: true });
 
@@ -205,7 +205,7 @@ describe('runInit: cancelled 路径 (统一措辞, 均不落盘)', () => {
 
   test('回显确认被拒: 同一措辞, 不落盘', async () => {
     const { deps, writes, confirmCalls, prints } = makeDeps({
-      asks: ['/a', ''],
+      asks: ['/a', '', ''],
       confirms: [false],
     });
 

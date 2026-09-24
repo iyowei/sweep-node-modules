@@ -30,10 +30,10 @@ function sceneRoots(configPath: string): string[] {
 /** 场景表: name 为 worker 分派键; input 为投喂给 worker stdin 的真实管道内容 */
 function makeScenes(configPath: string): { name: string; input: string }[] {
   return [
-    // 三行: 多根 / 排除名单 / 写入确认 (空行取默认 Y)
+    // 四行: 多根 / 排除名单 / 包含名单 / 写入确认 (空行取默认 Y)
     {
       name: 'written',
-      input: `${sceneRoots(configPath).join(', ')}\ndist\n\n`,
+      input: `${sceneRoots(configPath).join(', ')}\ndist\n\n\n`,
     },
     { name: 'eof', input: '' },
     { name: 'decline', input: 'n\n' },

@@ -1,5 +1,5 @@
 /**
- * 初始化向导: 两问 (扫描根 / 排除名单) + 覆盖保护, 交互 IO 依赖注入。
+ * 初始化向导: 三问 (扫描根 / 排除名单 / 包含名单) + 覆盖保护, 交互 IO 依赖注入。
  * 权威: sweep-node-modules 设计文档「配置初始化模型」与 ADR 0004 (配置初始化向导)。
  * 纯逻辑 (答案解析 / 状态流转 / 落盘文本) 与 readline 交互分离, 前者由 init.test.ts 钉死。
  * 视觉: 与清单同一套色块语言 (顶栏 / 中性行 / 标记原语见 render.ts), 着色开关经 IO 层注入。
@@ -125,7 +125,7 @@ export function parseList(answer: string | null, fallback: string[]): string[] {
  * 1. 顶栏先出 (与清单同一视觉语言), 配置已存在则再确认覆盖 (默认否), 拒绝即返回 declined-overwrite;
  * 2. 开场提示后问扫描根 (默认值为家目录而非 cwd: 工作区级清理与唤起目录无关, 提示里的默认值经
  *    家目录缩写): 逐根校验存在性, 不存在的红色 ✗ 提示后重问该问;
- * 3. 问排除名单 (可留空), 回显解析结果 (人话计数) 并确认 (默认写入);
+ * 3. 依次问排除名单与包含名单 (均可留空), 回显解析结果 (人话计数) 并确认 (默认写入);
  * 4. 中途取消与回显拒绝统一返回 cancelled 且不落盘 (取消文案保持原样, 不带视觉标记);
  * 5. 落盘后回显 (先报绿色 ✓ 写入路径, 家目录缩写; 再原样打印落盘全文, 与文件逐字一致), 返回 written。
  */
@@ -178,16 +178,19 @@ export async function runInit(deps: InitDeps): Promise<InitResult> {
   if (excludeAnswer === null) return cancelled();
   const exclude = parseList(excludeAnswer, []);
 
+  const includeAnswer = await io.ask('包含名单 (目录名, 可留空)', '回车跳过');
+  if (includeAnswer === null) return cancelled();
+  const include = parseList(includeAnswer, []);
+
   io.print(
     neutralLine(
-      `将写入 ${roots.length} 个扫描根 · 排除 ${exclude.length} 条`,
+      `将写入 ${roots.length} 个扫描根 · 排除 ${exclude.length} 条 · 包含 ${include.length} 条`,
       color,
     ),
   );
   if (!(await io.confirm('确认写入?', true))) return cancelled();
 
-  // include 显式落空数组: 向导不问白名单, 但字段在场让配置文件自文档化 (缺省虽等价, 却看不出有此能力)
-  const config = { roots, exclude, include: [] };
+  const config = { roots, exclude, include };
   const text = `${JSON.stringify(config, null, 2)}\n`;
   await writeFile(configPath, text);
   // 路径行缩写家目录便于辨认; 正文回显落盘原文 (与文件逐字一致, 便于对照与复制)
