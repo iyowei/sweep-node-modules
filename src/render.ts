@@ -129,10 +129,10 @@ export function formatBytes(bytes: number): string {
  *
  * 步骤 3：成行 (档位块随档位变, 体积右对齐, 项目名左对齐, 路径缩写)
  *   body = ['  █ 4.6 GB  acme-web     ~/workspace/development/acme-web',
- *           '  ▓  86 MB  docs-site    ~/workspace/development/docs-site']
+ *           '  ▒  86 MB  docs-site    ~/workspace/development/docs-site']
  *
  * 步骤 4：末行合计
- *   foot = '  █ 合计 2 处 · 4.6 GB   加 --yes 执行删除'
+ *   foot = '  █ 合计 2 处 · 4.7 GB   加 --yes 执行删除'
  *
  * Output（数据契约）
  *   return 多行文本 (行以 \n 分隔, 无尾换行)
