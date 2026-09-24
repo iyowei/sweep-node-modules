@@ -7,7 +7,7 @@
  * 模块划分 (同目录, 本文件只留 CLI 解析 / 编排 / 帮助):
  * - corpus.ts   语料类型、$FIXTURE 变量替换契约、目录加载与手写校验;
  * - fixture.ts  fixture 建树 / setup 预置 / 最小 env / 执行 / 清理;
- * - compare.ts  逐项比对 (退出码 / stdout / contains / fs 终态);
+ * - compare.ts  逐项比对 (退出码 / stdout 与 stderr 的子串含与禁含 / fs 终态);
  * - report.ts   报告数据结构与人读 / JSON 渲染。
  *
  * 语料权威: docs/protocol/conformance/corpus.schema.json (字段语义以 schema 为准; 手写校验是
