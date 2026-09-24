@@ -40,10 +40,13 @@ export const neutralLine = (text: string, color: boolean): string =>
   `  ${paint(`${NEUTRAL_BLOCK} ${text}`, '2', color)}`;
 
 /**
- * 体积档位阈值 (绝对初值, 可调: 待真实工作区 node_modules 分布实测后按分位数重标)。
- * 大 >= 1 GiB; 中 >= 100 MiB; 小 < 100 MiB。
+ * 体积档位阈值 (绝对阈值, 不做分位数动态计算; 已按真实工作区实测重标, 设计: cli-surface.md「体积档位与阈值」)。
+ * 大 >= 512 MiB; 中 >= 100 MiB; 小 < 100 MiB。
+ * 重标依据 (2026-09-24 实测, 主样本 n=5): 原 1 GiB 阈值高于全样本最大值 (590.72 MiB), 该档永不触发;
+ * 一维 k-means 的自然断点落在中 / 大之间 (约 405 MiB), 但红块须保持「稀有而醒目」, 取更保守的 512 MiB (半 GiB)。
+ * 样本量小, 该组阈值属可再重标者, 不是一次定死的分位规则。
  */
-const TIER_BIG = 1024 ** 3;
+const TIER_BIG = 512 * 1024 ** 2;
 const TIER_MID = 100 * 1024 ** 2;
 
 export interface RenderEntry {

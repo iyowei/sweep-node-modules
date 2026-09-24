@@ -12,8 +12,8 @@ const ROOTS = [ROOT_DEV];
 export const GIB = 1024 ** 3;
 export const MIB = 1024 ** 2;
 
-/** 档位阈值 (与实现约定的绝对初值, 改动需双方同步) */
-export const TIER_BIG = GIB;
+/** 档位阈值 (与实现约定的绝对阈值, 双方同步: 重标时此处与 render.ts 常量必须一并更新; 依据见 render.ts 常量注释) */
+export const TIER_BIG = 512 * MIB;
 export const TIER_MID = 100 * MIB;
 
 /** 固定样例: 覆盖大 / 中 / 小三档 + 中文项目名与中文路径 */
@@ -22,9 +22,10 @@ export const ACME_WEB: RenderEntry = {
   bytes: Math.round(4.6 * GIB),
   target: `${ROOT_DEV}/acme-web/node_modules`,
 };
+/** 中档样例 (与设计示意的 "366 MB" 同值) */
 export const DATA_PIPELINE: RenderEntry = {
   project: 'data-pipeline',
-  bytes: 620 * MIB,
+  bytes: 366 * MIB,
   target: `${ROOT_DEV}/data-pipeline/node_modules`,
 };
 export const DOCS_SITE: RenderEntry = {

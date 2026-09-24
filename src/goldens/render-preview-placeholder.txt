@@ -1,7 +1,7 @@
 [1;7m▍ SWEEP-NM  预览 · 1 个根: ~/workspace/development[0m
   [31m█[0m 4.6 GB  [1macme-web     [0m    [2m~/workspace/development/acme-web[0m
-  [33m▓[0m 620 MB  [1mdata-pipeline[0m    [2m~/workspace/development/data-pipeline[0m
+  [33m▓[0m 366 MB  [1mdata-pipeline[0m    [2m~/workspace/development/data-pipeline[0m
   [36m▒[0m  86 MB  [1mdocs-site    [0m    [2m~/workspace/development/docs-site[0m
   [36m▒[0m  12 MB  [1m学习笔记     [0m    [2m~/笔记/学习笔记[0m
   [2m░[0m      ?  [1mlocked       [0m    [2m~/workspace/development/locked[0m  [2m体积统计失败: 权限不足[0m
-  [7m█[0m [1m合计 5 处 · 5.3 GB[0m   [2m加[0m [1m--yes[0m [2m执行删除[0m
+  [7m█[0m [1m合计 5 处 · 5.1 GB[0m   [2m加[0m [1m--yes[0m [2m执行删除[0m

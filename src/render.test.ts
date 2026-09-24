@@ -168,7 +168,7 @@ describe('档位色块', () => {
     expect(out).toContain('▒');
   });
 
-  test('阈值边界: 1 GiB 与 100 MiB', () => {
+  test('阈值边界: 512 MiB 与 100 MiB', () => {
     expect(blockOf(TIER_BIG)).toBe('█');
     expect(blockOf(TIER_BIG - 1)).toBe('▓');
     expect(blockOf(TIER_MID)).toBe('▓');
@@ -216,7 +216,7 @@ describe('合计行', () => {
 
     expect(last).toContain('合计');
     expect(last).toContain('4 处');
-    expect(last).toContain('5.3 GB');
+    expect(last).toContain('5.1 GB');
     // 反引号是设计文档 markdown 残留, 终端 UI 输出纯 --yes
     expect(last).toContain('加 --yes 执行删除');
     expect(last).not.toContain('`');
@@ -321,7 +321,7 @@ describe('未测到体积的占位 (bytes undefined)', () => {
     const last = linesOf(out).at(-1) as string;
 
     expect(last).toContain('5 处');
-    expect(last).toContain('5.3 GB');
+    expect(last).toContain('5.1 GB');
   });
 
   test('全未测到: 合计 0 B, 行数照常', () => {
