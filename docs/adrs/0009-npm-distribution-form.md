@@ -11,7 +11,7 @@
 
 工具要发布到 npm (包名 `@iyowei/sweep-node-modules`)。npm 分发暴露了一个开发态不存在的问题: 安装后的代码位于 `node_modules` 之下, 而 node 拒绝对 `node_modules` 目录下的 TypeScript 文件做类型剥离。
 
-实测 (本机 node v26.7.0): 加载一个 `node_modules` 内的 `.ts` 文件直接抛 `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`; 该错误码自 node v22.6.0 起存在, 官方描述为「Type stripping is not supported for files descendant of a `node_modules` directory」(见 nodejs.org/api/errors.html)。
+实测 (本机 node v26.7.0): 加载一个 `node_modules` 内的 `.ts` 文件直接抛 `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`; 该错误码自 node v22.6.0 起存在, 官方描述为「Type stripping is not supported for files descendent of a `node_modules` directory」(descendent 为 v22 线原文拼写, 现行主线已规范为 descendant; 见 nodejs.org/api/errors.html)。
 
 后果: 包内若只发 TypeScript 源码, 只装 Node 的机器在 npm 安装后完全不可用, 与 [ADR 0006](0006-dual-runtime-bun-first.md)「装任一运行时即可使用」直接冲突; 分发形态必须重新裁定。
 
