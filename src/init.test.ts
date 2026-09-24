@@ -95,11 +95,17 @@ describe('runInit: written 路径', () => {
     expect(prints[0]).toBe('▍ SWEEP-NM  初始化向导');
     expect(prints[1]).toBe('  ░ 首次使用, 先确定扫描范围');
     expect(prints).toContain('  ░ 将写入 1 个扫描根 · 排除 0 条 · 包含 0 条');
-    // 落盘回执: 成功标记 + 家目录缩写 (降级态只去色码), 随后回显与落盘文件逐字一致的 JSON 原文
+    // 落盘回执: 成功标记 + 家目录缩写 (降级态只去色码);
+    // 随后回显落盘 JSON 全文 (内容与文件逐字一致, 整体加两空格缩进与其余行同左缘)
     expect(prints).toContain(
-      '  ✓ 配置已写入: ~/.config/sweep-node-modules/config.json',
+      '  配置已写入: ~/.config/sweep-node-modules/config.json  ✓',
     );
-    expect(prints).toContain(JSON.stringify(expected, null, 2));
+    expect(prints).toContain(
+      JSON.stringify(expected, null, 2)
+        .split('\n')
+        .map((line) => `  ${line}`)
+        .join('\n'),
+    );
     // 写入确认为最后一问且默认 Y
     expect(confirmCalls).toHaveLength(1);
     expect(confirmCalls[0]!.defaultYes).toBe(true);

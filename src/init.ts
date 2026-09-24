@@ -127,7 +127,7 @@ export function parseList(answer: string | null, fallback: string[]): string[] {
  *    家目录缩写): 逐根校验存在性, 不存在的红色 ✗ 提示后重问该问;
  * 3. 依次问排除名单与包含名单 (均可留空), 回显解析结果 (人话计数) 并确认 (默认写入);
  * 4. 中途取消与回显拒绝统一返回 cancelled 且不落盘 (取消文案保持原样, 不带视觉标记);
- * 5. 落盘后回显 (先报绿色 ✓ 写入路径, 家目录缩写; 再原样打印落盘全文, 与文件逐字一致), 返回 written。
+ * 5. 落盘后回显 (写入路径带家目录缩写与绿色 ✓; 落盘全文内容与文件一致、整体缩进 2), 返回 written。
  */
 export async function runInit(deps: InitDeps): Promise<InitResult> {
   const { configPath, fileExists, writeFile, io } = deps;
@@ -195,10 +195,17 @@ export async function runInit(deps: InitDeps): Promise<InitResult> {
   await writeFile(configPath, text);
   // 路径行缩写家目录便于辨认; 正文回显落盘原文 (与文件逐字一致, 便于对照与复制)
   io.print(
-    `  ${paint('✓', '32', color)} 配置已写入: ${shortenHome(configPath, homedir())}`,
+    `  配置已写入: ${shortenHome(configPath, homedir())}  ${paint('✓', '32', color)}`,
   );
   io.print('');
-  io.print(text.trimEnd());
+  // 回显逐行缩进 2, 与叙述行/交互行同一左缘 (内容与落盘文件逐字一致, 仅整体加固定两空格缩进)
+  io.print(
+    text
+      .trimEnd()
+      .split('\n')
+      .map((line) => `  ${line}`)
+      .join('\n'),
+  );
   io.print('');
   return { state: 'written', config };
 }
@@ -285,15 +292,16 @@ export function createReadlineIO(color: boolean): InitIO {
   return {
     color,
     ask(question, hint) {
+      // 缩进 2: 与叙述行 (neutralLine) 同一左缘, 全流程不横跳 (视觉规格见 cli-surface.md「init 向导」)
       const prompt =
         hint === undefined
-          ? `${question} `
-          : `${question} [${paint(hint, '2', color)}] `;
+          ? `  ${question} `
+          : `  ${question} [${paint(hint, '2', color)}] `;
       return readLine(prompt);
     },
     async confirm(question, defaultYes) {
       const mark = paint(defaultYes ? '(Y/n)' : '(y/N)', '2', color);
-      const answer = await readLine(`${question} ${mark} `);
+      const answer = await readLine(`  ${question} ${mark} `);
       if (answer === null) return false;
       const normalized = answer.trim().toLowerCase();
       if (normalized === '') return defaultYes;

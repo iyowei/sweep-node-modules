@@ -485,7 +485,8 @@ function defineExecuteCases(runner: string, available: boolean): void {
         expect(output).toContain('▍ SWEEP-NM  初始化向导');
         expect(output).toContain('  ░ 首次使用, 先确定扫描范围');
         expect(output).toContain('[默认: ~]');
-        expect(output).toContain('  ✓ 配置已写入');
+        expect(output).toContain('配置已写入: ');
+        expect(output).toContain('✓');
         expect(
           existsSync(
             join(home, '.config', 'sweep-node-modules', 'config.json'),
