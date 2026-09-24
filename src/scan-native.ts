@@ -71,22 +71,21 @@ async function collect(root: string, warnings: string[]): Promise<Candidate[]> {
 }
 
 /**
- * 后过滤: 排除名单任意一级命中 / .git 子树 / 嵌套 node_modules 只留最外层 / 白名单未命中。
- * 白名单判定只看 node_modules 之前的目录级别: 末段是 node_modules 自身, 不构成路径上的一级
- * (与剪枝候选「进入目录时才判定」的口径一致, 两候选对同一输入须给出同一结论)。
+ * 后过滤: 排除名单命中 / .git 子树 / 嵌套 node_modules 只留最外层 / 白名单未命中。
+ * 三条判定一律只看 node_modules 之前的目录级别: 末段是 node_modules 自身, 不构成路径上
+ * 的一级 (与剪枝候选「进入目录时才判定」的口径一致, 两候选对同一输入须给出同一结论)。
  */
 function rejected(
   segments: string[],
   exclude: Set<string>,
   include: Set<string>,
 ): boolean {
-  for (const segment of segments) {
-    if (segment === '.git' || exclude.has(segment)) return true;
-  }
   let included = include.size === 0;
   for (let index = 0; index < segments.length - 1; index += 1) {
-    if (segments[index] === 'node_modules') return true;
-    if (include.has(segments[index]!)) included = true;
+    const segment = segments[index]!;
+    if (segment === '.git' || exclude.has(segment)) return true;
+    if (segment === 'node_modules') return true;
+    if (include.has(segment)) included = true;
   }
   return !included;
 }

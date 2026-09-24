@@ -402,3 +402,112 @@ describe('scan 契约 [parallel] 平台去重键', () => {
     ]);
   });
 });
+
+/**
+ * 候选间一致 (对撞): 同一输入下三候选的输出必须逐字等价 (hits 含顺序), 告警对撞条数。
+ * 与上方参数化契约互补, 不互相替代: 契约钉「对规则的正确」(三候选同漂移到同一个错只有契约能抓),
+ * 对撞钉「实现之间的一致」(契约未铺到的输入组合里, 某一实现的单独漂移只有对撞能抓 —— 名单直写
+ * node_modules 即曾漏网的一格), 且自动覆盖将来新增的候选。
+ * 告警只对撞条数不对撞文案: 文案是有意保留的宽口径 (病因分流属 parallel 侧独占增强, 鲁棒套件
+ * 的口径是「可定位到被跳过的路径」), 在此加严等于用测试单方面改契约。
+ */
+describe('scan 契约 [候选间一致]', () => {
+  const collisions: {
+    name: string;
+    spec: WorkspaceSpec;
+    options?: {
+      exclude?: string[];
+      include?: string[];
+      roots?: (root: string) => string[];
+    };
+  }[] = [
+    {
+      name: '基本: 无名单',
+      spec: { projects: [{ dir: 'alpha' }, { dir: 'container/beta' }] },
+    },
+    {
+      name: '排除名单直写 node_modules: 名单只判 node_modules 之前的级别, 三候选同判',
+      spec: { projects: [{ dir: 'alpha' }, { dir: 'container/beta' }] },
+      options: { exclude: ['node_modules'] },
+    },
+    {
+      name: '包含名单直写 node_modules: 无级别可命中, 三候选同判零命中',
+      spec: { projects: [{ dir: 'alpha' }] },
+      options: { include: ['node_modules'] },
+    },
+    {
+      name: '排除与包含同命中: 三候选同取 exclude 优先',
+      spec: { projects: [{ dir: 'both/proj' }, { dir: 'self/proj' }] },
+      options: { exclude: ['both'], include: ['both', 'self'] },
+    },
+    {
+      name: '嵌套与 .git 诱饵: 三候选同留最外层',
+      spec: {
+        projects: [{ dir: 'alpha', nested: true, git: true }, { dir: 'beta' }],
+      },
+    },
+    {
+      name: '符号链接镜像: 三候选同不跟进、不重复',
+      spec: {
+        projects: [{ dir: 'real' }],
+        symlinks: [{ at: 'mirror', to: 'real' }],
+      },
+    },
+    {
+      name: '多根重复与嵌套: 三候选同去重',
+      spec: { projects: [{ dir: 'alpha' }] },
+      options: { roots: (root) => [root, root, join(root, 'alpha')] },
+    },
+    {
+      name: '空工作区: 三候选同零命中零告警',
+      spec: { projects: [] },
+    },
+    {
+      name: '不可读目录: 三候选同跳过同告警条数',
+      spec: { projects: [{ dir: 'beta' }], unreadable: ['locked'] },
+    },
+  ];
+
+  for (const collision of collisions) {
+    test(collision.name, async () => {
+      const { root } = await make(collision.spec);
+      const options = {
+        roots: collision.options?.roots
+          ? collision.options.roots(root)
+          : [root],
+        exclude: collision.options?.exclude ?? [],
+        include: collision.options?.include ?? [],
+      };
+
+      const results = [];
+      for (const scanner of candidates) {
+        const result = await scanner.scan(options);
+        results.push({
+          name: scanner.name,
+          hits: result.hits,
+          warningCount: result.warnings.length,
+        });
+      }
+
+      // 键为候选名: 等值时断言通过, 不等时 diff 直接点出差在哪家
+      const reference = results[0]!;
+      const hitsByCandidate = Object.fromEntries(
+        results.map((result) => [result.name, result.hits]),
+      );
+      expect(hitsByCandidate).toEqual(
+        Object.fromEntries(
+          results.map((result) => [result.name, reference.hits]),
+        ),
+      );
+
+      const warningsByCandidate = Object.fromEntries(
+        results.map((result) => [result.name, result.warningCount]),
+      );
+      expect(warningsByCandidate).toEqual(
+        Object.fromEntries(
+          results.map((result) => [result.name, reference.warningCount]),
+        ),
+      );
+    });
+  }
+});
