@@ -69,11 +69,12 @@ function defineQueryCases(runner: string, available: boolean): void {
         const result = runCli(runner, ['config'], { env: { HOME: home } });
 
         expect(result.status).toBe(0);
-        expect(result.stdout).toContain('配置来源: 平台默认');
+        // 降级形态 (管道 + NO_COLOR): 零 ANSI 但保留顶栏与中性块字符
+        expect(result.stdout).toContain('▍ SWEEP-NM  配置 · 来源: 平台默认');
         expect(result.stdout).toContain(
           join(home, '.config', 'sweep-node-modules', 'config.json'),
         );
-        expect(result.stdout).toContain('文件状态: 不存在');
+        expect(result.stdout).toContain('  ░ 文件状态: 不存在');
       },
     );
 
@@ -88,7 +89,7 @@ function defineQueryCases(runner: string, available: boolean): void {
         });
 
         expect(result.status).toBe(0);
-        expect(result.stdout).toContain('配置来源: --config 指定');
+        expect(result.stdout).toContain('配置 · 来源: --config 指定');
         expect(result.stdout).toContain(flagConfig);
         expect(result.stdout).toContain('文件状态: 存在');
         expect(result.stdout).not.toContain(envConfig);
@@ -105,7 +106,9 @@ function defineQueryCases(runner: string, available: boolean): void {
         });
 
         expect(result.status).toBe(0);
-        expect(result.stdout).toContain('配置来源: 环境变量 SWEEP_NM_CONFIG');
+        expect(result.stdout).toContain(
+          '配置 · 来源: 环境变量 SWEEP_NM_CONFIG',
+        );
         expect(result.stdout).toContain(config);
         expect(result.stdout).toContain('文件状态: 存在');
       },

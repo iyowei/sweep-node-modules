@@ -15,9 +15,9 @@ const BANNER = 'SWEEP-NM';
  */
 export const BAR_BLOCK = '▍';
 
-/** 合计块 / 空结果中性块 (render 内部使用) */
+/** 合计块 / 中性块: 空结果提示与中性行共用 (向导与 config 也复用, 见 neutralLine) */
 const TOTAL_BLOCK = '█';
-const NEUTRAL_BLOCK = '░';
+export const NEUTRAL_BLOCK = '░';
 
 /** 缺省路径风味: 平台原生 (模块加载时定格一次, 调用期不再读环境, 保持 render 纯函数) */
 const PLATFORM_STYLE = nativeStyle();
@@ -27,6 +27,17 @@ const NEUTRAL_TIER = { block: NEUTRAL_BLOCK, sgr: '2' };
 
 /** 顶栏列出根路径的上限: 根数不超过此值时直接列路径 (只报数量时用户无法确认扫描范围) */
 const ROOT_LIST_LIMIT = 3;
+
+/**
+ * 顶栏行: 反色加粗 (SGR 1;7) 的 `▍ SWEEP-NM` + 两空格 + 本次动作自述。
+ * 清单 / 帮助 / config / 向导四处共用同一构造 (各写一份即视觉规范漂移); suffix 由调用方自负净化。
+ */
+export const bannerLine = (suffix: string, color: boolean): string =>
+  paint(`${BAR_BLOCK} ${BANNER}  ${suffix}`, '1;7', color);
+
+/** 中性提示行: 缩进 2 + 中性块 + 整行压暗 (色块视觉规范里的说明性行, 不打断顶栏与主体的紧邻关系) */
+export const neutralLine = (text: string, color: boolean): string =>
+  `  ${paint(`${NEUTRAL_BLOCK} ${text}`, '2', color)}`;
 
 /**
  * 体积档位阈值 (绝对初值, 可调: 待真实工作区 node_modules 分布实测后按分位数重标)。
@@ -133,20 +144,20 @@ export function render(options: RenderOptions): string {
       ? `${roots.length} 个根: ${roots.map((root) => oneLine(shortenPath(root, style, home))).join(' · ')}`
       : `${roots.length} 个根`;
   const runtime = options.runtime ? ` · ${oneLine(options.runtime)}` : '';
-  const head = paint(
-    `${BAR_BLOCK} ${BANNER}  ${mode === 'execute' ? '执行' : '预览'} · ${scope}${runtime}`,
-    '1;7',
+  const head = bannerLine(
+    `${mode === 'execute' ? '执行' : '预览'} · ${scope}${runtime}`,
     color,
   );
-  // 顶栏下方的中性提示: 与清单同一视觉语言 (缩进 2 + 中性块), 不打断顶栏与清单的紧邻关系
-  const notes = (options.notes ?? []).map(
-    (note) => `  ${paint(`${NEUTRAL_BLOCK} ${oneLine(note)}`, '2', color)}`,
+  // 顶栏下方的中性提示: 与清单同一视觉语言, 不打断顶栏与清单的紧邻关系
+  const notes = (options.notes ?? []).map((note) =>
+    neutralLine(oneLine(note), color),
   );
 
   if (entries.length === 0) {
     return [
       head,
       ...notes,
+      // 空结果行保留内联形态: make-mutants.ts 以此字面量为 mutant 注入锚点, 换成 neutralLine 即失配
       `  ${paint(`${NEUTRAL_BLOCK} 未发现 node_modules`, '2', color)}`,
     ].join('\n');
   }

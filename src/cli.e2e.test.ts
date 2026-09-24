@@ -480,6 +480,11 @@ function defineExecuteCases(runner: string, available: boolean): void {
         expect(output).toContain('首次配置已生成'); // 说明行 (stderr 经 pty 合流)
         expect(output).toContain('合计'); // 走的是预览
         expect(output).not.toContain('汇总'); // 未进入执行
+        // 向导继承清单的视觉语言; NO_COLOR=1 下只去色码, 顶栏 / 中性块 / 标记字符照旧
+        expect(output).toContain('▍ SWEEP-NM  初始化向导');
+        expect(output).toContain('  ░ 首次使用, 先确定扫描范围');
+        expect(output).toContain('[默认: ~]');
+        expect(output).toContain('  ✓ 配置已写入');
         expect(
           existsSync(
             join(home, '.config', 'sweep-node-modules', 'config.json'),

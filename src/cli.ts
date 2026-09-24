@@ -19,7 +19,13 @@ import {
 import { type RemovalResult, removeTargets } from './delete.ts';
 import { validateTargets } from './guard.ts';
 import { type InitResult, createReadlineIO, runInit } from './init.ts';
-import { BAR_BLOCK, type RenderEntry, paint, render } from './render.ts';
+import {
+  type RenderEntry,
+  bannerLine,
+  neutralLine,
+  paint,
+  render,
+} from './render.ts';
 import { runtimeLabel, writeTextFile } from './runtime.ts';
 import { createScanner } from './scan.ts';
 import { createSizer } from './size.ts';
@@ -146,7 +152,7 @@ function helpText(color: boolean): string {
   const row = (command: string, desc: string): string =>
     `  ${command.padEnd(COMMAND_COLUMN)}  ${desc}`;
   return [
-    `${paint(`${BAR_BLOCK} SWEEP-NM`, '1;7', color)}  工作区 node_modules 清理`,
+    bannerLine('工作区 node_modules 清理', color),
     '',
     row('sweep-nm', '预览: 清单 + 体积 + 合计, 零副作用'),
     row('sweep-nm --yes', '执行删除'),
@@ -184,7 +190,7 @@ async function fileExists(path: string): Promise<boolean> {
  * 跑初始化向导 (交互全在 init 模块, 本层只注入 readline 与落盘通道)。
  * 落盘前先建目标目录: 平台默认配置路径首跑时父目录尚不存在 (如 ~/.config/sweep-node-modules)。
  */
-function runWizard(configPath: string): Promise<InitResult> {
+function runWizard(configPath: string, color: boolean): Promise<InitResult> {
   return runInit({
     configPath,
     fileExists,
@@ -192,7 +198,7 @@ function runWizard(configPath: string): Promise<InitResult> {
       await mkdir(dirname(path), { recursive: true });
       await writeTextFile(path, text);
     },
-    io: createReadlineIO(),
+    io: createReadlineIO(color),
   });
 }
 
@@ -222,14 +228,18 @@ const SOURCE_LABELS: Record<ConfigSource, string> = {
  *   exists = false
  *
  * Output（数据契约）
- *   print 三行 (配置来源 / 配置路径 / 文件状态); return 0
+ *   print 顶栏 + 两行中性提示 (来源 / 路径 / 文件状态); return 0
  * ```
  */
-async function reportConfig(resolved: ResolvedConfigPath): Promise<number> {
+async function reportConfig(
+  resolved: ResolvedConfigPath,
+  color: boolean,
+): Promise<number> {
   const exists = await fileExists(resolved.path);
-  print(`配置来源: ${SOURCE_LABELS[resolved.source]}`);
-  print(`配置路径: ${resolved.path}`);
-  print(`文件状态: ${exists ? '存在' : '不存在'}`);
+  // 来源是最核心信息, 由顶栏承载; 路径与状态作顶栏下方的中性提示行 (与清单同一视觉语言)
+  print(bannerLine(`配置 · 来源: ${SOURCE_LABELS[resolved.source]}`, color));
+  print(neutralLine(`配置路径: ${resolved.path}`, color));
+  print(neutralLine(`文件状态: ${exists ? '存在' : '不存在'}`, color));
   return 0;
 }
 
@@ -266,6 +276,7 @@ interface ResolvedConfig {
  */
 async function resolveConfig(
   resolved: ResolvedConfigPath,
+  color: boolean,
 ): Promise<ResolvedConfig | null> {
   const loaded = await loadResolvedConfig(resolved);
   if (loaded.state === 'ok') return { config: loaded.config, source: 'file' };
@@ -276,7 +287,7 @@ async function resolveConfig(
       source: 'fallback',
     };
 
-  const result = await runWizard(resolved.path);
+  const result = await runWizard(resolved.path, color);
   if (result.state === 'written' && result.config !== undefined) {
     // 直接用向导返回的配置: 它与 init 写盘的对象同一份, 白名单已由 init 显式落空数组
     // (设计: config-and-initialization.md), 此处不重述
@@ -595,18 +606,20 @@ async function main(): Promise<number> {
         warn('init 需要交互终端 (请在终端直接运行, 不要重定向或经管道)', color);
         return 1;
       }
-      const result = await runWizard(resolvedPath.path);
-      if (result.state === 'written') print('运行 sweep-nm 查看预览');
+      const result = await runWizard(resolvedPath.path, color);
+      // 成功路径的收尾指引按中性提示行呈现 (取消路径的「配置未变更」保持原样, 不带视觉标记)
+      if (result.state === 'written')
+        print(neutralLine('运行 sweep-nm 查看预览', color));
       else print('配置未变更');
       return 0;
     }
 
     // config 子命令: 只报告本次实际生效的配置, 不进入装载与清理流程 (文件不存在也退 0)
     if (options.command === 'config') {
-      return await reportConfig(resolvedPath);
+      return await reportConfig(resolvedPath, color);
     }
 
-    const resolved = await resolveConfig(resolvedPath);
+    const resolved = await resolveConfig(resolvedPath, color);
     if (resolved === null) return 0;
 
     // 无配置的 cwd 回退态不承载执行语义: 首次用户可能只凭一行提示就删掉整棵目录树的 node_modules

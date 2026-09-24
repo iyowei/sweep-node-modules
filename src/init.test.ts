@@ -16,6 +16,8 @@ const CONFIG_PATH = '/Users/iyowei/.config/sweep-node-modules/config.json';
 function makeFakeIO(script: {
   asks?: (string | null)[];
   confirms?: boolean[];
+  /** 着色开关 (缺省 false): 逐字断言钉降级形态, 着色用例单独翻 true */
+  color?: boolean;
 }) {
   const askCalls: { question: string; hint?: string }[] = [];
   const confirmCalls: { question: string; defaultYes: boolean }[] = [];
@@ -24,6 +26,7 @@ function makeFakeIO(script: {
   const pendingConfirms = [...(script.confirms ?? [])];
 
   const io: InitIO = {
+    color: script.color ?? false,
     async ask(question, hint) {
       askCalls.push({ question, hint });
       if (pendingAsks.length === 0)
@@ -52,6 +55,8 @@ function makeDeps(options: {
   rootExists?: (path: string) => boolean;
   asks?: (string | null)[];
   confirms?: boolean[];
+  /** 着色开关 (缺省 false) */
+  color?: boolean;
 }) {
   const { io, askCalls, confirmCalls, prints } = makeFakeIO(options);
   const writes: { path: string; text: string }[] = [];
@@ -84,15 +89,15 @@ describe('runInit: written 路径', () => {
     expect(writes).toHaveLength(1);
     expect(writes[0]!.path).toBe(CONFIG_PATH);
     expect(writes[0]!.text).toBe(`${JSON.stringify(expected, null, 2)}\n`);
-    expect(askCalls[0]!.hint).toContain(homedir());
-    // 开场一句, 回显解析结果在确认前可见, 收尾落盘回执
-    expect(prints[0]).toBe('首次使用, 先确定扫描范围');
+    // 默认值提示经家目录缩写 (homedir 自身即缩写为 ~)
+    expect(askCalls[0]!.hint).toBe('默认: ~');
+    // 顶栏先出; 开场一句作中性提示行, 回显解析结果在确认前可见, 收尾落盘回执
+    expect(prints[0]).toBe('▍ SWEEP-NM  初始化向导');
+    expect(prints[1]).toBe('  ░ 首次使用, 先确定扫描范围');
+    expect(prints).toContain('  ░ 将写入 1 个扫描根 · 排除 0 条');
+    // 落盘回执: 成功标记 + 家目录缩写 (降级态只去色码), 随后回显与落盘文件逐字一致的 JSON 原文
     expect(prints).toContain(
-      `将写入 roots: ${JSON.stringify([homedir()])} · exclude: []`,
-    );
-    // 落盘回执: 路径行做家目录缩写, 随后回显与落盘文件逐字一致的 JSON 原文
-    expect(prints).toContain(
-      '配置已写入: ~/.config/sweep-node-modules/config.json',
+      '  ✓ 配置已写入: ~/.config/sweep-node-modules/config.json',
     );
     expect(prints).toContain(JSON.stringify(expected, null, 2));
     // 写入确认为最后一问且默认 Y
@@ -117,9 +122,7 @@ describe('runInit: written 路径', () => {
       },
     });
     expect(writes).toHaveLength(1);
-    expect(prints).toContain(
-      '将写入 roots: ["/a","/b","/c"] · exclude: ["dist","coverage"]',
-    );
+    expect(prints).toContain('  ░ 将写入 3 个扫描根 · 排除 2 条');
   });
 
   test('已存在配置且确认覆盖: 覆盖确认默认否, 写入确认默认 Y', async () => {
@@ -152,11 +155,27 @@ describe('runInit: written 路径', () => {
       state: 'written',
       config: { roots: ['/ok'], exclude: [], include: [] },
     });
-    expect(prints).toContain('根不存在: /missing-a');
-    expect(prints).toContain('根不存在: /missing-b');
+    expect(prints).toContain('  ✗ 根不存在: /missing-a');
+    expect(prints).toContain('  ✗ 根不存在: /missing-b');
     // 根问了两次 (重问), 加排除一次, 共三次
     expect(askCalls).toHaveLength(3);
     expect(askCalls[1]!.question).toBe(askCalls[0]!.question);
+  });
+
+  test('着色开关只改色码: 剥去 ANSI 后与降级态逐字一致', async () => {
+    const script = { asks: ['', ''], confirms: [true] };
+    const plain = makeDeps(script);
+    const colored = makeDeps({ ...script, color: true });
+
+    await runInit(plain.deps);
+    await runInit(colored.deps);
+
+    expect(colored.prints.some((line) => line.includes('\x1b['))).toBe(true);
+    const strip = (line: string): string =>
+      // 有意匹配 ANSI 控制序列: 剥去色码正是本断言的职责, 非误用
+      // eslint-disable-next-line no-control-regex
+      line.replace(/\x1b\[[0-9;]*m/g, '');
+    expect(colored.prints.map(strip)).toEqual(plain.prints);
   });
 });
 
@@ -211,7 +230,8 @@ describe('runInit: declined-overwrite 路径', () => {
     expect(result).toEqual({ state: 'declined-overwrite' });
     expect(writes).toHaveLength(0);
     expect(askCalls).toHaveLength(0);
-    expect(prints).toHaveLength(0);
+    // 除开场顶栏外不再输出任何行 (取消分支不新造视觉)
+    expect(prints).toEqual(['▍ SWEEP-NM  初始化向导']);
   });
 });
 

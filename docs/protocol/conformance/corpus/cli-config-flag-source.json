@@ -22,6 +22,6 @@
   },
   "expect": {
     "exitCode": 0,
-    "stdoutExact": "配置来源: --config 指定\n配置路径: $FIXTURE/cfg-flag.json\n文件状态: 存在\n"
+    "stdoutExact": "▍ SWEEP-NM  配置 · 来源: --config 指定\n  ░ 配置路径: $FIXTURE/cfg-flag.json\n  ░ 文件状态: 存在\n"
   }
 }

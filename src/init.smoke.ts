@@ -77,7 +77,8 @@ async function runWorker(name: string, configPath: string): Promise<void> {
       writeFile: async (path, text) => {
         await writeFile(path, text);
       },
-      io: createReadlineIO(),
+      // 冒烟经真实管道投喂 (非 TTY), 着色恒关闭: 钉的是壳不死锁与落盘契约, 非着色形态
+      io: createReadlineIO(false),
     });
 
     if (name === 'written') {
