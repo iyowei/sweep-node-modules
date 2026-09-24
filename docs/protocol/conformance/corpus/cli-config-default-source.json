@@ -1,0 +1,10 @@
+{
+  "id": "cli-config-default-source",
+  "specRefs": ["BC-35"],
+  "fixture": {},
+  "run": { "argv": ["config"] },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "配置来源: 平台默认\n配置路径: $FIXTURE/home/.config/sweep-node-modules/config.json\n文件状态: 不存在\n"
+  }
+}

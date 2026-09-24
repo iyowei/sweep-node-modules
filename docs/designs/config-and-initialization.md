@@ -24,7 +24,7 @@
 | Windows              | `%APPDATA%\sweep-node-modules\config.json` |
 | 其余 (macOS / Linux) | `~/.config/sweep-node-modules/config.json` |
 
-优先级: `--config <path>` > 环境变量 `SWEEP_NM_CONFIG` > 平台默认 (覆盖通道亦服务测试与受控环境); 见 [ADR 0007](../adrs/0007-platform-portability.md)。
+优先级: `--config <path>` > 环境变量 `SWEEP_NM_CONFIG` > 平台默认 (覆盖通道亦服务测试与受控环境); 见 [ADR 0007](../adrs/0007-platform-portability.md)。本次实际生效的路径与文件存在与否用 `sweep-nm config` 查询 (见 [命令面与输出](cli-surface.md))。
 
 ```json
 {

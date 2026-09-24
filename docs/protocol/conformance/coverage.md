@@ -11,6 +11,14 @@
 > **本次加固依据 (维护规则「只增不改既有期望」的三向定责记录)**: 新增语料 `scan-node-modules-and-git-in-lists-noop` (BC-34),
 > 并给 `scan-include-exclude-priority` 补 `stderrMustNotContain` 与 BC-33 背书; 既有期望逐条未动, 属加固而非改判。
 > 定责结论: 修条款 (BC-33 补计数口径 / BC-34 新立) + 修语料 (两处), 实现侧对照 `7e2c9bd` 与 `b8297e9` 已正确, 无需改实现。
+>
+> **`config` 子命令一轮的定责记录 (2026-09-24)**: 新增子命令 `config` (BC-35 新立, 可验收性 posix 分支)
+> 与其三条语料 `cli-config-default-source` / `cli-config-env-source` / `cli-config-flag-source`
+> (后两条兼背书 BC-16 的三级覆盖, flag 条同时钉住「旗标优先于环境变量」)。
+> `cli-help` 的逐字节期望随命令面扩展同步更新 (帮助新增 `sweep-nm config` 行, 「默认配置位置」行补
+> 「仅为平台默认、覆盖通道下不成立」的限定并补 `查实际生效的路径: sweep-nm config` 指引), BC-30 条款补记该要求;
+> 属需求变更引发的同步, 非基准降级 (期望由 BC-30 / BC-35 条款原文辩护, 非按实现反推)。
+> 本轮双载体 (bun / node) 全量各跑一遍全绿。
 
 ## 一、条款 × 语料覆盖
 
@@ -30,7 +38,7 @@
 | BC-12 | 1      | render-tier-mid-and-order                                                                                                                                                                                                                                                                    |
 | BC-14 | 1      | size-unmeasured-preview                                                                                                                                                                                                                                                                      |
 | BC-15 | 1      | size-unmeasured-blocks-delete                                                                                                                                                                                                                                                                |
-| BC-16 | 2      | config-env-source, config-flag-over-env                                                                                                                                                                                                                                                      |
+| BC-16 | 4      | cli-config-env-source, cli-config-flag-source, config-env-source, config-flag-over-env                                                                                                                                                                                                       |
 | BC-17 | 1      | config-explicit-missing-hard-error                                                                                                                                                                                                                                                           |
 | BC-18 | 2      | cli-no-config-non-tty-cwd-fallback, config-env-source                                                                                                                                                                                                                                        |
 | BC-19 | 3      | config-corrupt-json, config-corrupt-shape-roots-missing, config-shape-item-type                                                                                                                                                                                                              |
@@ -47,6 +55,7 @@
 | BC-32 | 2      | scan-include-exclude-priority, scan-ancestor-excluded-unmatched-warn                                                                                                                                                                                                                         |
 | BC-33 | 3      | scan-include-exclude-priority, scan-include-unmatched-warn, scan-ancestor-excluded-unmatched-warn                                                                                                                                                                                            |
 | BC-34 | 1      | scan-node-modules-and-git-in-lists-noop                                                                                                                                                                                                                                                      |
+| BC-35 | 3      | cli-config-default-source, cli-config-env-source, cli-config-flag-source                                                                                                                                                                                                                     |
 | OF-01 | 4      | render-banner-4-roots, render-empty-result, render-path-tilde, scan-basic-preview                                                                                                                                                                                                            |
 | OF-02 | 4      | render-tier-mid-and-order, scan-basic-preview, scan-order-target-asc, size-unmeasured-preview                                                                                                                                                                                                |
 | OF-03 | 13     | delete-execute-ok, render-align-cjk, render-path-tilde, scan-basic-preview, scan-exclude-cli-merge, scan-exclude-config, scan-git-bait, scan-include-cli-merge, scan-include-config, scan-include-exclude-priority, scan-nested-prune, scan-root-symlink-followed, scan-symlink-not-followed |
@@ -80,15 +89,15 @@
 
 inject mutant (经 `make-mutants.ts` 从冻结源复制 + 单行级补丁生成), 逐一对全量语料 (本次快照) 跑:
 **全部被抓住** (判据要求 ≥2 条用例; 该门槛对全部 mutant 均有实测支撑, 含抓取面最窄者)。五个 mutant 三连跑数字完全一致
-(27 / 11 / 3 / 6 / 26), 抓取面稳定; `sort-missing` 见下方观察, 数字本身不稳定。
+(27 / 11 / 4 / 7 / 26), 抓取面稳定; `sort-missing` 见下方观察, 数字本身不稳定。
 
 | mutant (注入缺陷)                | 抓住它的用例数 | 代表用例                                                                   |
 | -------------------------------- | -------------- | -------------------------------------------------------------------------- |
 | prune-negated (剪枝谓词取反)     | 27             | scan-basic-preview, scan-nested-prune, scan-include-config                 |
 | exit-swallowed (退出码吞掉)      | 11             | cli-unknown-arg, config-corrupt-json, size-unmeasured-blocks-delete        |
 | sort-missing (排序缺失)          | 波动 (见观察)  | delete-execute-multi-summary, scan-basic-preview                           |
-| exclude-silent (排除静默失效)    | 3              | scan-exclude-config, scan-exclude-cli-merge, scan-include-exclude-priority |
-| message-removed (提示语删改)     | 6              | render-empty-result, render-banner-4-roots, scan-include-unmatched-warn    |
+| exclude-silent (排除静默失效)    | 4              | scan-exclude-config, scan-exclude-cli-merge, scan-include-exclude-priority |
+| message-removed (提示语删改)     | 7              | render-empty-result, render-banner-4-roots, scan-include-unmatched-warn    |
 | size-unit-wrong (体积计数单位错) | 26             | render-tier-mid-and-order, scan-basic-preview, scan-include-cli-merge      |
 
 观察: `sort-missing` 抓取面最窄, 因它依赖「并发完成序 ≠ 升序」是否在本次调度中落败,
@@ -96,3 +105,9 @@ inject mutant (经 `make-mutants.ts` 从冻结源复制 + 单行级补丁生成)
 其判据按该随机性取 ≥2 (与其余 mutant 同口径)。**本 mutant 无每轮必抓的用例**: 同体积清单类语料
 (`scan-order-target-asc` 与 `scan-include-cli-merge`) 与 `delete-execute-multi-summary`
 等命中率最高, 但放大样本后仍见缺席轮, 故本 mutant 的抓取集合整体随调度浮动。
+
+> **`config` 子命令一轮的重测校准 (2026-09-24)**: 随本轮全量重跑一并重测全部 mutant (三连跑逐条一致)。
+> 两个数字相对本表旧值上调: `exclude-silent` 3 → 4、`message-removed` 6 → 7; 归因已实证:
+> 用剔除 `scan-ancestor-excluded-unmatched-warn` 的子集语料复跑, 两者即回落至 3 / 6, 故增量的来源即该条语料。
+> 该条由 `8f9e9b8` 引入, 而该提交只重算了本表第一部分的覆盖关系 (三行), 未重测变异自证, 属遗留漂移, 本轮以实测校准。
+> 本轮新增的三条 `cli-config-*` 语料不被任何 mutant 抓住: mutant 注入面在扫描 / 渲染 / 退出码主链路上, 与 `config` 子命令无交集。

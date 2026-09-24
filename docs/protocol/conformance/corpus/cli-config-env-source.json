@@ -1,0 +1,21 @@
+{
+  "id": "cli-config-env-source",
+  "specRefs": ["BC-16", "BC-35"],
+  "fixture": {},
+  "setup": [
+    {
+      "write": {
+        "path": "cfg.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "argv": ["config"],
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/cfg.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "配置来源: 环境变量 SWEEP_NM_CONFIG\n配置路径: $FIXTURE/cfg.json\n文件状态: 存在\n"
+  }
+}

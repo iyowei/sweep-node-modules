@@ -1,6 +1,7 @@
 /**
- * 入口编排: 参数解析 → 配置定位与装载 (缺失按交互与否分流) → 扫描 → 体积 → 预览渲染
- * → (`--yes`) 安全闸校验 → 删除 → 执行报告。业务全在模块内, 本层只做接线与退出码。
+ * 入口编排: 参数解析 → 配置定位, 子命令分流 (`init` 向导 / `config` 报告) 或装载
+ * (缺失按交互与否分流) → 扫描 → 体积 → 预览渲染 → (`--yes`) 安全闸校验 → 删除 → 执行报告。
+ * 业务全在模块内, 本层只做接线与退出码。
  * 权威: docs/designs/cli-surface.md (命令面 / 退出码) 与 config-and-initialization.md。
  */
 import { lstat, mkdir, realpath } from 'node:fs/promises';
@@ -9,6 +10,7 @@ import { basename, dirname } from 'node:path';
 
 import {
   type Config,
+  type ConfigSource,
   type ResolvedConfigPath,
   loadResolvedConfig,
   mergeNames,
@@ -27,8 +29,8 @@ import type { ScanHit, ScanResult, SizeResult } from './types.ts';
 const COMMAND_COLUMN = 25;
 
 interface CliOptions {
-  /** 子命令: 缺省为清理流程, init 只跑向导 */
-  command: 'sweep' | 'init';
+  /** 子命令: 缺省为清理流程, init 只跑向导, config 只报告配置 */
+  command: 'sweep' | 'init' | 'config';
   /** 执行删除 (缺省为预览) */
   yes: boolean;
   /** `--exclude` 可重复, 与配置名单合并 */
@@ -45,7 +47,7 @@ type ParseOutcome =
 
 /**
  * 解析参数: `--yes` / `--exclude <name>` / `--include <name>` / `--config <path>` / `--help`
- * 与 `init` 子命令; 未知参数、旗标缺值、多余位置参数一律判错 (调用方落退出码 1)。
+ * 与 `init` / `config` 子命令; 未知参数、旗标缺值、多余位置参数一律判错 (调用方落退出码 1)。
  *
  * ### 数据追踪示例
  * ```text
@@ -97,10 +99,13 @@ function parseArgs(argv: string[]): ParseOutcome {
   }
 
   const [only] = positionals;
-  if (positionals.length > 1 || (only !== undefined && only !== 'init')) {
+  if (
+    positionals.length > 1 ||
+    (only !== undefined && only !== 'init' && only !== 'config')
+  ) {
     return { ok: false, message: `未知参数: ${positionals.join(' ')}` };
   }
-  if (only === 'init') options.command = 'init';
+  if (only === 'init' || only === 'config') options.command = only;
   return { ok: true, options };
 }
 
@@ -151,16 +156,28 @@ function helpText(color: boolean): string {
       '只清理命中名单的目录 (可重复, 与配置合并)',
     ),
     row('sweep-nm --config <path>', '指定配置文件 (优先于 SWEEP_NM_CONFIG)'),
+    row('sweep-nm config', '查看实际生效的配置: 来源 + 路径 + 文件状态'),
     row('sweep-nm init', '初始化向导: 交互生成配置文件'),
     row('sweep-nm --help', '帮助'),
     '',
     '说明:',
     '  --exclude 按目录名精确匹配 (区分大小写), 从根到命中点的任意一级命中即跳过',
     '  --include 同款匹配口径, 命中才纳入; 同时命中 exclude 的照旧跳过',
-    `  默认配置位置 (平台自适应): ${defaultConfigPath()}`,
+    `  默认配置位置 (平台自适应; 用了 --config 或 SWEEP_NM_CONFIG 时实际读的不是它): ${defaultConfigPath()}`,
+    '  查实际生效的路径: sweep-nm config',
     '',
     '退出码: 0 成功 (含预览与空结果); 1 删除失败 / 配置损坏 / 参数错误',
   ].join('\n');
+}
+
+/** 文件存在判定 (lstat 语义): 向导的落盘前判重与 config 子命令的「文件状态」共用同一口径 */
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    await lstat(path);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -170,20 +187,50 @@ function helpText(color: boolean): string {
 function runWizard(configPath: string): Promise<InitResult> {
   return runInit({
     configPath,
-    async fileExists(path) {
-      try {
-        await lstat(path);
-        return true;
-      } catch {
-        return false;
-      }
-    },
+    fileExists,
     async writeFile(path, text) {
       await mkdir(dirname(path), { recursive: true });
       await writeTextFile(path, text);
     },
     io: createReadlineIO(),
   });
+}
+
+/** 配置来源的人话标签 (与 resolveConfigPath 的 source 三档一一对应) */
+const SOURCE_LABELS: Record<ConfigSource, string> = {
+  flag: '--config 指定',
+  env: '环境变量 SWEEP_NM_CONFIG',
+  'platform-default': '平台默认',
+};
+
+/**
+ * config 子命令: 如实报告本次实际生效的配置位置与状态, 退出码恒 0 —— 这是查询不是校验,
+ * 文件不存在属报告内容而非错误 (与 `git config --list` / `npm config get` 的惯例一致)。
+ * 与 `--help` 的分工: 帮助里的「默认配置位置」刻意屏蔽环境变量、只答平台默认 (见 defaultConfigPath),
+ * 本命令答的是三级覆盖后真正生效的那一个。
+ * 只 lstat 探存在性、不装载内容: 配置损坏与否不在报告面内 (那是清理流程的硬错)。
+ *
+ * ### 数据追踪示例
+ * ```text
+ * Input（真实 Payload）
+ *   resolved = { path: '/Users/iyowei/.config/sweep-node-modules/config.json', source: 'platform-default' }
+ *
+ * 步骤 1：来源映射人话 (flag → '--config 指定'; env → '环境变量 SWEEP_NM_CONFIG'; platform-default → '平台默认')
+ *   label = '平台默认'
+ *
+ * 步骤 2：探文件存在 (lstat; 不存在也照常报告, 不改退出码)
+ *   exists = false
+ *
+ * Output（数据契约）
+ *   print 三行 (配置来源 / 配置路径 / 文件状态); return 0
+ * ```
+ */
+async function reportConfig(resolved: ResolvedConfigPath): Promise<number> {
+  const exists = await fileExists(resolved.path);
+  print(`配置来源: ${SOURCE_LABELS[resolved.source]}`);
+  print(`配置路径: ${resolved.path}`);
+  print(`文件状态: ${exists ? '存在' : '不存在'}`);
+  return 0;
 }
 
 /**
@@ -552,6 +599,11 @@ async function main(): Promise<number> {
       if (result.state === 'written') print('运行 sweep-nm 查看预览');
       else print('配置未变更');
       return 0;
+    }
+
+    // config 子命令: 只报告本次实际生效的配置, 不进入装载与清理流程 (文件不存在也退 0)
+    if (options.command === 'config') {
+      return await reportConfig(resolvedPath);
     }
 
     const resolved = await resolveConfig(resolvedPath);

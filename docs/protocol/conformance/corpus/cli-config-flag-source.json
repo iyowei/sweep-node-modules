@@ -1,0 +1,27 @@
+{
+  "id": "cli-config-flag-source",
+  "specRefs": ["BC-16", "BC-35"],
+  "fixture": {},
+  "setup": [
+    {
+      "write": {
+        "path": "cfg-flag.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE\"],\n  \"exclude\": []\n}\n"
+      }
+    },
+    {
+      "write": {
+        "path": "cfg-env.json",
+        "text": "{\n  \"roots\": [\"$FIXTURE\"],\n  \"exclude\": []\n}\n"
+      }
+    }
+  ],
+  "run": {
+    "argv": ["--config", "$FIXTURE/cfg-flag.json", "config"],
+    "env": { "SWEEP_NM_CONFIG": "$FIXTURE/cfg-env.json" }
+  },
+  "expect": {
+    "exitCode": 0,
+    "stdoutExact": "配置来源: --config 指定\n配置路径: $FIXTURE/cfg-flag.json\n文件状态: 存在\n"
+  }
+}

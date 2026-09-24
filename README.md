@@ -88,6 +88,9 @@ sweep-nm --exclude my-kits --exclude url-tool
 # 只清理名单命中的目录(可重复, 与配置合并)
 sweep-nm --include my-kits
 
+# 查看实际生效的配置文件位置与状态 (来源 / 路径 / 是否存在)
+sweep-nm config
+
 # 初始化向导: 交互式生成配置文件
 sweep-nm init
 ```
@@ -96,7 +99,7 @@ sweep-nm init
 
 ## 配置
 
-配置文件位置 (平台自适应): Windows 为 `%APPDATA%\sweep-node-modules\config.json`, 其余为 `~/.config/sweep-node-modules/config.json`; 可用 `--config` 或环境变量 `SWEEP_NM_CONFIG` 覆盖。
+配置文件位置 (平台自适应): Windows 为 `%APPDATA%\sweep-node-modules\config.json`, 其余为 `~/.config/sweep-node-modules/config.json`; 可用 `--config` 或环境变量 `SWEEP_NM_CONFIG` 覆盖, 本次实际生效的路径与文件状态用 `sweep-nm config` 查看。
 
 ```json
 {
