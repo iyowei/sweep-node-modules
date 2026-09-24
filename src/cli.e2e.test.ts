@@ -215,7 +215,9 @@ function definePreviewCases(runner: string, available: boolean): void {
         });
 
         expect(result.status).toBe(0);
-        expect(result.stderr).toContain('排除名未匹配到任何目录: nosuchdir');
+        expect(result.stderr).toContain(
+          '排除名未命中任何已扫描的目录: nosuchdir',
+        );
         expect(result.stdout).not.toContain('排除名未匹配');
       },
     );
@@ -262,7 +264,9 @@ function definePreviewCases(runner: string, available: boolean): void {
         const result = runCli(runner, [], { env: { SWEEP_NM_CONFIG: config } });
 
         expect(result.status).toBe(0);
-        expect(result.stderr).toContain('包含名未匹配到任何目录: typo-name');
+        expect(result.stderr).toContain(
+          '包含名未命中任何已扫描的目录: typo-name',
+        );
         // 与排除名写错的后果不同: 白名单全零命中直接意味着扫不出东西, 须点明
         expect(result.stderr).toContain(
           '包含名单无一条命中, 本次扫描必为空结果',

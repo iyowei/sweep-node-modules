@@ -20,8 +20,8 @@
     "stdoutExact": "▍ SWEEP-NM  预览 · 1 个根: $FIXTURE/zone\n  ░ 未发现 node_modules\n",
     "stdoutMustNotContain": ["keep"],
     "stderrContains": [
-      "包含名未匹配到任何目录: nosuch (按目录名精确匹配)",
-      "包含名单无一条命中, 本次扫描必为空结果 (请核对名字与大小写)"
+      "包含名未命中任何已扫描的目录: nosuch (按目录名精确匹配; 若其上层目录已被排除则属预期)",
+      "包含名单无一条命中, 本次扫描必为空结果 (请核对名字与大小写; 若名字位于被排除的目录之下则属预期)"
     ]
   }
 }

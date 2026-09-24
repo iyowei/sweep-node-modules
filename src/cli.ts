@@ -338,21 +338,32 @@ function collectNameNotes(
   // 与 notes 的去向 (stdout) 同一判据: 提示进清单流, 便按 stdout 是否为终端决定要不要加
   const tty = process.stdout.isTTY === true;
 
+  // 措辞不断言「名字不存在」: 名字位于被 exclude 的祖先目录之下时, 该子树按排除优先整棵跳过、
+  // 不参与逐名计数, 此时报的是「未命中已扫描的目录」而非「写错了」(见 behavior-contract.md BC-33 例外)
   for (const item of excludeMatches ?? []) {
     if (item.hits === 0)
-      warn(`排除名未匹配到任何目录: ${item.name} (按目录名精确匹配)`, color);
+      warn(
+        `排除名未命中任何已扫描的目录: ${item.name} (按目录名精确匹配; 若其上层目录已被排除则属预期)`,
+        color,
+      );
     else if (tty) notes.push(`排除生效: ${item.name} (${item.hits} 处)`);
   }
 
   const includes = includeMatches ?? [];
   for (const item of includes) {
     if (item.hits === 0)
-      warn(`包含名未匹配到任何目录: ${item.name} (按目录名精确匹配)`, color);
+      warn(
+        `包含名未命中任何已扫描的目录: ${item.name} (按目录名精确匹配; 若其上层目录已被排除则属预期)`,
+        color,
+      );
     else if (tty) notes.push(`包含命中: ${item.name} (${item.hits} 处)`);
   }
   // 逐名告警已在上方给出, 此处点明整体后果: 白名单一条都没命中, 本次必然什么都扫不出
   if (includes.length > 0 && includes.every((item) => item.hits === 0))
-    warn('包含名单无一条命中, 本次扫描必为空结果 (请核对名字与大小写)', color);
+    warn(
+      '包含名单无一条命中, 本次扫描必为空结果 (请核对名字与大小写; 若名字位于被排除的目录之下则属预期)',
+      color,
+    );
 
   return notes;
 }
