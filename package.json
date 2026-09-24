@@ -1,6 +1,6 @@
 {
   "name": "@iyowei/sweep-node-modules",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "工作区级 node_modules 清理工具: 一次扫描多个根目录, 跨项目列出体积, 确认后批量删除。",
   "keywords": [
     "cli",
